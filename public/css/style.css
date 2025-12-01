@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@160..700&display=swap');
+*{
+    font-family: "Readex Pro", sans-serif;
+    text-transform: uppercase !important;
+}
+/* Hilangkan scrollbar di Chrome, Safari, Edge */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hilangkan scrollbar di Firefox */
+.no-scrollbar {
+    scrollbar-width: none;
+}
+
+/* Styling Select2 agar Terlihat Seperti Input Tailwind */
+
+/* Container Utama (untuk Border dan Rounded) */
+.select2-container--default .select2-selection--single {
+    /* Mengganti border dan rounding bawaan Select2 */
+    @apply border border-gray-300 rounded shadow-sm;
+}
+
+/* Bagian Teks yang Tampil (untuk Padding) */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    /* Menghilangkan padding bawaan Select2 dan menyesuaikannya dengan px-3 py-2 */
+    @apply px-3 py-2 text-base text-gray-700 leading-none;
+}
+
+/* Container saat dalam keadaan Fokus */
+.select2-container--default.select2-container--focus .select2-selection--single {
+    /* Menerapkan styling ring dan border fokus yang sama seperti input form */
+    @apply border-blue-400 ring-2 ring-blue-200;
+}
+
+/* Styling Button Radio Murni */
+
+.status-radio-label {
+    /* Gaya Dasar Tombol (Meniru w-1/2, px-4, py-2, rounded, text-white, font-bold) */
+    width: 50%;
+    padding: 8px 16px;
+    border-radius: 0.25rem; /* rounded */
+    color: white;
+    font-weight: 700; /* font-bold */
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, border 0.15s ease-in-out;
+    border: 2px solid transparent; /* Border awal transparan */
+}
+
+/* --- Gaya DEFAULT (Jika Tidak Terpilih) --- */
+
+/* Default Selesai (Hijau Muda) */
+.status-container input#statusComplete + .status-radio-label {
+    background-color: #34D399; /* bg-green-500 */
+}
+
+/* Default Belum (Merah Muda) */
+.status-container input#statusRevert + .status-radio-label {
+    background-color: #F87171; /* bg-red-500 */
+}
+
+/* --- Gaya ACTIVE STATE (Ketika Radio Terpilih) --- */
+
+/* Selesai: Jika statusComplete TERPILIH */
+.status-container input#statusComplete:checked + .status-radio-label {
+    background-color: #047857; /* bg-green-700 (Hijau Gelap) */
+    /* Tambahkan efek visual Ring */
+    border-color: #D1FAE5; /* ring-green-100 */
+}
+
+/* Belum: Jika statusRevert TERPILIH */
+.status-container input#statusRevert:checked + .status-radio-label {
+    background-color: #B91C1C; /* bg-red-700 (Merah Gelap) */
+    /* Tambahkan efek visual Ring */
+    border-color: #FEE2E2; /* ring-red-100 */
+}
+
+/* Hover State (Opsional, agar tetap responsif) */
+.status-radio-label:hover {
+    opacity: 0.9;
+}
+.progress_custom, .bg_custom{
+    background-image: url(../images/wood.jpg);
+    background-position: center;
+    background-size: cover;
+}
+/* Ukuran font input terpilih */
+.popup_custom .select2-container .select2-selection--single {
+    height: 20px !important;
+    font-size: 12px !important;
+    padding: 3px !important;
+}
+
+.popup_custom .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 12px !important;
+    line-height: 1 !important;
+}
+
+/* Ukuran font dropdown menu */
+.popup_custom .select2-container--default .select2-results__option {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+}
+
+/* Ukuran font placeholder */
+.popup_custom .select2-selection__placeholder {
+    font-size: 12px !important;
+}

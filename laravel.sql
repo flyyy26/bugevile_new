@@ -372,22 +372,19 @@ CREATE TABLE `orders` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `nama_konsumen` varchar(255) NOT NULL DEFAULT 'rafli',
   `keterangan` text NOT NULL DEFAULT 'gaada',
-  `id_jenis_bahan` bigint(20) UNSIGNED DEFAULT NULL,
-  `id_jenis_pola` bigint(20) UNSIGNED DEFAULT NULL,
-  `id_jenis_kerah` bigint(20) UNSIGNED DEFAULT NULL,
-  `id_jenis_jahitan` bigint(20) UNSIGNED DEFAULT NULL
+  -- removed unused spesifikasi columns: id_jenis_bahan, id_jenis_pola, id_jenis_kerah, id_jenis_jahitan
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `orders`
 --
 
-INSERT INTO `orders` (`id`, `jenis_order_id`, `nama_job`, `slug`, `qty`, `hari`, `deadline`, `setting`, `print`, `press`, `cutting`, `jahit`, `finishing`, `packing`, `est`, `sisa_print`, `total_lembar_print`, `total_lembar_press`, `sisa_press`, `sisa_cutting`, `sisa_jahit`, `sisa_finishing`, `sisa_packing`, `created_at`, `updated_at`, `nama_konsumen`, `keterangan`, `id_jenis_bahan`, `id_jenis_pola`, `id_jenis_kerah`, `id_jenis_jahitan`) VALUES
-(145, 15, 'kao oblong', 'kao-oblong', 148, 4.90, 4.90, 0, 0, 0, 0, 0, 0, 0, 4.90, 148, 0, 0, 148, 148, 148, 148, 148, '2025-11-30 17:18:21', '2025-11-30 17:18:21', 'ali tegal', 'Bahan: pe | Pola: Reglan | Kerah: O-Neck | Jahitan: Bawah Overdeck', NULL, 2, 2, 3),
-(147, 15, 'JERSEY BOLA', 'jersey-bola-1', 18, 0.60, 0.60, 1, 18, 0, 0, 0, 0, 0, 0.60, 0, 54, 0, 18, 18, 18, 18, 18, '2025-11-30 17:55:13', '2025-11-30 18:38:59', 'manonjaya sorum', 'Bahan: BENZEMA | Pola: Reguler | Kerah: V-Neck | Jahitan: Samping Flatlock(nomor dar 2-19)', 1, 1, 1, 2),
-(148, 15, 'jersey running', 'jersey-running', 5, 0.20, 0.00, 1, 5, 5, 5, 5, 5, 5, 0.20, 0, 15, 15, 0, 0, 0, 0, 0, '2025-11-30 18:00:33', '2025-11-30 18:16:15', 'denim', 'Bahan: Milano | Pola: Reguler | Kerah: O-Neck | Jahitan: Pundak Rante', 4, 1, 2, 1),
-(149, 15, 'CELANA BOLA', 'celana-bola', 45, 1.50, 1.50, 0, 0, 0, 0, 0, 0, 0, 1.50, 45, 0, 0, 45, 45, 45, 45, 45, '2025-11-30 18:02:38', '2025-11-30 18:02:38', 'smp manon jaya', 'Bahan: BENZEMA | Pola: Reguler | Kerah: V-Neck | Jahitan: Samping Flatlock', 1, 1, 1, 2),
-(150, 14, 'JERSEY MTB', 'jersey-mtb', 1, 0.00, 0.00, 0, 0, 0, 0, 0, 0, 0, 0.00, 1, 0, 0, 1, 1, 1, 1, 1, '2025-11-30 21:05:11', '2025-11-30 21:05:11', 'BARALA', 'Bahan: BENZEMA | Pola: Sambungan Pinggir | Kerah: V-Neck | Jahitan: Samping Flatlock', 1, 3, 1, 2);
+INSERT INTO `orders` (`id`, `jenis_order_id`, `nama_job`, `slug`, `qty`, `hari`, `deadline`, `setting`, `print`, `press`, `cutting`, `jahit`, `finishing`, `packing`, `est`, `sisa_print`, `total_lembar_print`, `total_lembar_press`, `sisa_press`, `sisa_cutting`, `sisa_jahit`, `sisa_finishing`, `sisa_packing`, `created_at`, `updated_at`, `nama_konsumen`, `keterangan`) VALUES
+(145, 15, 'kao oblong', 'kao-oblong', 148, 4.90, 4.90, 0, 0, 0, 0, 0, 0, 0, 4.90, 148, 0, 0, 148, 148, 148, 148, 148, '2025-11-30 17:18:21', '2025-11-30 17:18:21', 'ali tegal', 'Bahan: pe | Pola: Reglan | Kerah: O-Neck | Jahitan: Bawah Overdeck'),
+(147, 15, 'JERSEY BOLA', 'jersey-bola-1', 18, 0.60, 0.60, 1, 18, 0, 0, 0, 0, 0, 0.60, 0, 54, 0, 18, 18, 18, 18, 18, '2025-11-30 17:55:13', '2025-11-30 18:38:59', 'manonjaya sorum', 'Bahan: BENZEMA | Pola: Reguler | Kerah: V-Neck | Jahitan: Samping Flatlock(nomor dar 2-19)'),
+(148, 15, 'jersey running', 'jersey-running', 5, 0.20, 0.00, 1, 5, 5, 5, 5, 5, 5, 0.20, 0, 15, 15, 0, 0, 0, 0, 0, '2025-11-30 18:00:33', '2025-11-30 18:16:15', 'denim', 'Bahan: Milano | Pola: Reguler | Kerah: O-Neck | Jahitan: Pundak Rante'),
+(149, 15, 'CELANA BOLA', 'celana-bola', 45, 1.50, 1.50, 0, 0, 0, 0, 0, 0, 0, 1.50, 45, 0, 0, 45, 45, 45, 45, 45, '2025-11-30 18:02:38', '2025-11-30 18:02:38', 'smp manon jaya', 'Bahan: BENZEMA | Pola: Reguler | Kerah: V-Neck | Jahitan: Samping Flatlock'),
+(150, 14, 'JERSEY MTB', 'jersey-mtb', 1, 0.00, 0.00, 0, 0, 0, 0, 0, 0, 0, 0.00, 1, 0, 0, 1, 1, 1, 1, 1, '2025-11-30 21:05:11', '2025-11-30 21:05:11', 'BARALA', 'Bahan: BENZEMA | Pola: Sambungan Pinggir | Kerah: V-Neck | Jahitan: Samping Flatlock');
 
 -- --------------------------------------------------------
 
@@ -653,11 +650,7 @@ ALTER TABLE `migrations`
 ALTER TABLE `orders`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `orders_slug_unique` (`slug`),
-  ADD KEY `orders_jenis_order_id_foreign` (`jenis_order_id`),
-  ADD KEY `orders_id_jenis_bahan_foreign` (`id_jenis_bahan`),
-  ADD KEY `orders_id_jenis_pola_foreign` (`id_jenis_pola`),
-  ADD KEY `orders_id_jenis_kerah_foreign` (`id_jenis_kerah`),
-  ADD KEY `orders_id_jenis_jahitan_foreign` (`id_jenis_jahitan`);
+  ADD KEY `orders_jenis_order_id_foreign` (`jenis_order_id`);
 
 --
 -- Indexes for table `order_histories`
@@ -851,10 +844,6 @@ ALTER TABLE `jenis_order`
 -- Constraints for table `orders`
 --
 ALTER TABLE `orders`
-  ADD CONSTRAINT `orders_id_jenis_bahan_foreign` FOREIGN KEY (`id_jenis_bahan`) REFERENCES `jenis_bahan` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `orders_id_jenis_jahitan_foreign` FOREIGN KEY (`id_jenis_jahitan`) REFERENCES `jenis_jahitan` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `orders_id_jenis_kerah_foreign` FOREIGN KEY (`id_jenis_kerah`) REFERENCES `jenis_kerah` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `orders_id_jenis_pola_foreign` FOREIGN KEY (`id_jenis_pola`) REFERENCES `jenis_pola` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `orders_jenis_order_id_foreign` FOREIGN KEY (`jenis_order_id`) REFERENCES `jenis_order` (`id`) ON DELETE SET NULL;
 
 --

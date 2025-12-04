@@ -1,537 +1,424 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Pesanan')
+@section('title','Spesifikasi')
 
 @section('content')
-<div class="p-6">
 
-    <h1 class="text-2xl font-bold mb-4">Spesifikasi Produksi</h1>
+<div class="w-full p-4">
 
-    {{-- ======== TABEL ========== --}}
-    <div class="grid grid-cols-2 gap-6">
-
-        {{-- JENIS BAHAN --}}
-        <div>
-            <div class="flex justify-between mb-2">
-                <h2 class="font-bold">Jenis Bahan</h2>
-                <button onclick="openModal('modalBahan')" class="bg-blue-600 text-white px-3 py-1 rounded">+ Tambah</button>
-            </div>
-            <table class="table-auto w-full">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Gambar</th>
-                        <th class="px-4 py-2">Nama</th>
-                        <th class="px-4 py-2">Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach ($bahan as $jb)
-                        <tr>
-                            <td class="border px-4 py-2">
-                                @if ($jb->gambar)
-                                    <img src="{{ asset('storage/' . $jb->gambar) }}" 
-                                        alt="{{ $jb->nama }}" 
-                                        class="h-16 w-16 object-cover rounded">
-                                @else
-                                    <span class="text-gray-400 italic">Tidak ada</span>
-                                @endif
-                            </td>
-
-                            <td class="border px-4 py-2">{{ $jb->nama }}</td>
-
-                            <td class="border px-4 py-2">
-                                <button 
-                                    type="button"
-                                    onclick="openEditModalBahan(this)"
-                                    data-id-bahan="{{ $jb->id }}"
-                                    data-nama-bahan="{{ $jb->nama }}"
-                                    class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                    Edit
-                                </button>
-                                <form action="{{ url('/spesifikasi/bahan/' . $jb->id) }}" 
-                                    method="POST"
-                                    onsubmit="return confirm('Yakin ingin menghapus jenis bahan ini?')">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit" 
-                                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        {{-- JENIS POLA --}}
-        <div>
-            <div class="flex justify-between mb-2">
-                <h2 class="font-bold">Jenis Pola</h2>
-                <button onclick="openModal('modalPola')" class="bg-blue-600 text-white px-3 py-1 rounded">+ Tambah</button>
-            </div>
-            <table class="table-auto w-full">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Gambar</th>
-                        <th class="px-4 py-2">Nama</th>
-                        <th class="px-4 py-2">Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach ($pola as $jp)
-                        <tr>
-                            <td class="border px-4 py-2">
-                                @if ($jp->gambar)
-                                    <img src="{{ asset('storage/' . $jp->gambar) }}" 
-                                        alt="{{ $jp->nama }}" 
-                                        class="h-16 w-16 object-cover rounded">
-                                @else
-                                    <span class="text-gray-400 italic">Tidak ada</span>
-                                @endif
-                            </td>
-
-                            <td class="border px-4 py-2">{{ $jp->nama }}</td>
-
-                            <td class="border px-4 py-2">
-                                <button 
-                                    type="button"
-                                    onclick="openEditModalPola(this)"
-                                    data-id-pola="{{ $jp->id }}"
-                                    data-nama-pola="{{ $jp->nama }}"
-                                    class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                    Edit
-                                </button>
-                                <form action="{{ url('/spesifikasi/pola/' . $jp->id) }}" 
-                                    method="POST"
-                                    onsubmit="return confirm('Yakin ingin menghapus jenis pola ini?')">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit" 
-                                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        {{-- JENIS KERAH --}}
-        <div>
-            <div class="flex justify-between mb-2">
-                <h2 class="font-bold">Jenis Kerah</h2>
-                <button onclick="openModal('modalKerah')" class="bg-blue-600 text-white px-3 py-1 rounded">+ Tambah</button>
-            </div>
-            <table class="table-auto w-full">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Gambar</th>
-                        <th class="px-4 py-2">Nama</th>
-                        <th class="px-4 py-2">Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach ($kerah as $jk)
-                        <tr>
-                            <td class="border px-4 py-2">
-                                @if ($jk->gambar)
-                                    <img src="{{ asset('storage/' . $jk->gambar) }}" 
-                                        alt="{{ $jk->nama }}" 
-                                        class="h-16 w-16 object-cover rounded">
-                                @else
-                                    <span class="text-gray-400 italic">Tidak ada</span>
-                                @endif
-                            </td>
-
-                            <td class="border px-4 py-2">{{ $jk->nama }}</td>
-
-                            <td class="border px-4 py-2">
-                                <button 
-                                    type="button"
-                                    onclick="openEditModalKerah(this)"
-                                    data-id-kerah="{{ $jk->id }}"
-                                    data-nama-kerah="{{ $jk->nama }}"
-                                    class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                    Edit
-                                </button>
-                                <form action="{{ url('/spesifikasi/kerah/' . $jk->id) }}" 
-                                    method="POST"
-                                    onsubmit="return confirm('Yakin ingin menghapus jenis kerah ini?')">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit" 
-                                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        {{-- JENIS JAHITAN --}}
-        <div>
-            <div class="flex justify-between mb-2">
-                <h2 class="font-bold">Jenis Jahitan</h2>
-                <button onclick="openModal('modalJahitan')" class="bg-blue-600 text-white px-3 py-1 rounded">+ Tambah</button>
-            </div>
-            <table class="table-auto w-full">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Gambar</th>
-                        <th class="px-4 py-2">Nama</th>
-                        <th class="px-4 py-2">Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach ($jahitan as $jk)
-                        <tr>
-                            <td class="border px-4 py-2">
-                                @if ($jk->gambar)
-                                    <img src="{{ asset('storage/' . $jk->gambar) }}" 
-                                        alt="{{ $jk->nama }}" 
-                                        class="h-16 w-16 object-cover rounded">
-                                @else
-                                    <span class="text-gray-400 italic">Tidak ada</span>
-                                @endif
-                            </td>
-
-                            <td class="border px-4 py-2">{{ $jk->nama }}</td>
-
-                            <td class="border px-4 py-2">
-                                <!-- Tombol EDIT -->
-                                <button 
-                                    type="button"
-                                    onclick="openEditModal(this)"
-                                    data-id="{{ $jk->id }}"
-                                    data-nama="{{ $jk->nama }}"
-                                    class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                    Edit
-                                </button>
-                                <form action="{{ url('/spesifikasi/jahitan/' . $jk->id) }}" 
-                                    method="POST"
-                                    onsubmit="return confirm('Yakin ingin menghapus jenis jahitan ini?')">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit" 
-                                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
+    {{-- TAB --}}
+    <div class="flex flex-wrap gap-2 mb-6 border-b pb-2">
+        @foreach($kategori as $index => $k)
+            <button
+                onclick="showTab({{ $k->id }})"
+                id="tab-{{ $k->id }}"
+                class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-200 text-gray-700"
+            >
+                {{ $k->nama }}
+            </button>
+        @endforeach
     </div>
 
-    {{-- ======== POPUP MODAL ======== --}}
-    @include('dashboard.spesifikasi-modals')
+    {{-- CONTENT --}}
+    @foreach($kategori as $index => $k)
+        <div class="kategori-content hidden" id="content-{{ $k->id }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
+
+                @foreach($k->jenisSpek as $index => $s)
+                    <button
+                        onclick="showSpekDetail({{ $k->id }}, {{ $s->id }})"
+                        id="spek-tab-{{ $s->id }}"
+                        class="p-2 py-2 shadow rounded-lg border text-center transition {{ $index === 0 ? 'bg-blue-600 text-white' : 'bg-white hover:bg-blue-50' }}"
+                    >
+                        <h3 class="font-semibold text-sm">
+                            {{ $s->nama_jenis_spek }}
+                        </h3>
+                    </button>
+                @endforeach
+
+
+                {{-- BUTTON TAMBAH — SELALU ADA & SEJAJAR --}}
+                <button
+                    onclick="openModal({{ $k->id }})"
+                    class="bg-green-600 hover:bg-green-700 text-white px-2 py-2 rounded-lg text-sm h-full"
+                >
+                    + Tambah Spek
+                </button>
+
+            </div>
+
+            @foreach($k->jenisSpek as $s)
+                <div 
+                    id="spek-content-{{ $k->id }}-{{ $s->id }}" 
+                    class="hidden mt-6"
+                >
+                    @if(optional($s->detail)->count())
+                        <div class="overflow-x-auto">
+                            <table class="w-full border">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="border p-2">No</th>
+                                        <th class="border p-2">Nama Detail</th>
+                                        <th class="border p-2">Gambar</th>
+                                        <th class="border p-2">Jenis Order</th>
+                                        <th class="border p-2">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($s->detail as $i => $d)
+                                        <tr>
+                                            <td class="border p-2">{{ $i + 1 }}</td>
+                                            <td class="border p-2">{{ $d->nama_jenis_spek_detail }}</td>
+                                            <td class="border p-2 text-center">
+                                                @if($d->gambar)
+                                                    <img src="{{ asset('storage/' . $d->gambar) }}" alt="Gambar" class="w-12 h-12 object-cover rounded">
+                                                @else
+                                                    <span class="text-gray-400 italic text-sm">Tidak ada</span>
+                                                @endif
+                                            </td>
+                                            <td class="border p-2">
+                                                @if($d->jenisOrder->count())
+                                                    <div class="flex flex-wrap gap-1">
+                                                        @foreach($d->jenisOrder as $jo)
+                                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                                                                {{ $jo->nama_jenis }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <span class="text-gray-400 italic text-sm">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="border p-2 text-center">
+                                                <button
+                                                    onclick="openDetailModal({{ $s->id }}, {{ $d->id }}, '{{ $d->nama_jenis_spek_detail }}', {{ $d->jenisOrder->pluck('id')->toJson() }})"
+                                                    class="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <form 
+                                                    action="{{ url('/jenis-spek-detail/' . $d->id) }}" 
+                                                    method="POST" 
+                                                    style="display:inline;"
+                                                    onsubmit="return confirm('Yakin ingin menghapus?')"
+                                                >
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium ml-2">
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <button
+                                onclick="openDetailModal({{ $s->id }}, null, '')"
+                                class="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm"
+                            >
+                                + Tambah Detail
+                            </button>
+                        </div>
+                    @else
+                        <div class="text-gray-500 italic mb-3">
+                            Belum ada detail jenis spek
+                        </div>
+                        <button
+                            onclick="openDetailModal({{ $s->id }}, null, '')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm"
+                        >
+                            + Tambah Detail
+                        </button>
+                    @endif
+                </div>
+            @endforeach
+
+
+        </div>
+    @endforeach
+
 
 </div>
 
-<div id="editModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl w-96 p-6">
-        <h2 class="text-lg font-bold mb-4">Edit Jenis Jahitan</h2>
 
-        <form id="editForm" method="POST" enctype="multipart/form-data">
+<!-- MODAL JENIS SPEK -->
+<div 
+    id="modalJenisSpek" 
+    class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg">
+
+        <h2 class="text-xl font-bold mb-4">Tambah Jenis Spek</h2>
+
+        <form action="{{ route('jenis_spek.store') }}" method="POST">
             @csrf
-            @method('PUT')
+            <input type="hidden" name="id_kategori_jenis_order" id="kategori_id_input">
 
-            <div class="mb-3">
-                <label class="text-sm">Nama Jahitan</label>
+            <div class="mb-4">
+                <label class="block mb-2 font-medium">Nama Jenis Spek</label>
                 <input
                     type="text"
-                    name="nama"
-                    id="editNama"
-                    class="w-full border rounded px-3 py-2"
-                >
-            </div>
-
-            <div class="mb-3">
-                <label class="text-sm">Ganti Gambar (optional)</label>
-                <input
-                    type="file"
-                    name="gambar"
-                    class="w-full border rounded px-3 py-2"
-                >
+                    name="nama_jenis_spek"
+                    class="w-full border px-3 py-2 rounded focus:outline-none focus:ring"
+                    placeholder="Contoh: Ukuran, Warna, Bahan..."
+                    required>
             </div>
 
             <div class="flex justify-end gap-2">
-                <button
+                <button 
                     type="button"
-                    onclick="closeEditModal()"
-                    class="px-3 py-1 bg-gray-400 text-white rounded"
+                    onclick="closeModal()"
+                    class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
                 >
                     Batal
                 </button>
 
-                <button
+                <button 
                     type="submit"
-                    class="px-3 py-1 bg-green-500 text-white rounded"
+                    class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                 >
                     Simpan
                 </button>
             </div>
+
         </form>
     </div>
 </div>
-<div id="editModalBahan" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl w-96 p-6">
-        <h2 class="text-lg font-bold mb-4">Edit Jenis Bahan</h2>
 
-        <form id="editFormBahan" method="POST" enctype="multipart/form-data">
+<!-- MODAL JENIS SPEK DETAIL -->
+<div 
+    id="modalJenisSpekDetail" 
+    class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg">
+
+        <h2 class="text-xl font-bold mb-4" id="modalDetailTitle">Tambah Jenis Spek Detail</h2>
+
+        <form id="formDetailSpek" method="POST" enctype="multipart/form-data">
             @csrf
-            @method('PUT')
+            <input type="hidden" name="id_jenis_spek" id="detail_spek_id_input">
+            <input type="hidden" name="current_kategori_id" id="current_kategori_id_input">
+            <input type="hidden" name="_method" id="detail_method_input" value="POST">
 
-            <div class="mb-3">
-                <label class="text-sm">Nama Bahan</label>
+            <div class="mb-4">
+                <label class="block mb-2 font-medium">Nama Detail</label>
                 <input
                     type="text"
-                    name="nama"
-                    id="editNamaBahan"
-                    class="w-full border rounded px-3 py-2"
-                >
+                    name="nama_jenis_spek_detail"
+                    id="detail_nama_input"
+                    class="w-full border px-3 py-2 rounded focus:outline-none focus:ring"
+                    placeholder="Contoh: S, M, L..."
+                    required>
             </div>
 
-            <div class="mb-3">
-                <label class="text-sm">Ganti Gambar (optional)</label>
+            <div class="mb-4">
+                <label class="block mb-2 font-medium">Jenis Order</label>
+                <div id="jenisOrderCheckboxContainer" class="border p-3 rounded max-h-40 overflow-y-auto">
+                    <!-- Checkbox akan diisi oleh JavaScript saat modal dibuka -->
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block mb-2 font-medium">Gambar (Opsional)</label>
                 <input
                     type="file"
                     name="gambar"
-                    class="w-full border rounded px-3 py-2"
-                >
+                    id="detail_gambar_input"
+                    accept="image/*"
+                    class="w-full border px-3 py-2 rounded focus:outline-none focus:ring">
             </div>
 
             <div class="flex justify-end gap-2">
-                <button
+                <button 
                     type="button"
-                    onclick="closeEditModalBahan()"
-                    class="px-3 py-1 bg-gray-400 text-white rounded"
+                    onclick="closeDetailModal()"
+                    class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
                 >
                     Batal
                 </button>
 
-                <button
+                <button 
                     type="submit"
-                    class="px-3 py-1 bg-green-500 text-white rounded"
+                    class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                 >
                     Simpan
                 </button>
             </div>
-        </form>
-    </div>
-</div>
-<div id="editModalPola" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl w-96 p-6">
-        <h2 class="text-lg font-bold mb-4">Edit Jenis Pola</h2>
 
-        <form id="editFormPola" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-
-            <div class="mb-3">
-                <label class="text-sm">Nama Pola</label>
-                <input
-                    type="text"
-                    name="nama"
-                    id="editNamaPola"
-                    class="w-full border rounded px-3 py-2"
-                >
-            </div>
-
-            <div class="mb-3">
-                <label class="text-sm">Ganti Gambar (optional)</label>
-                <input
-                    type="file"
-                    name="gambar"
-                    class="w-full border rounded px-3 py-2"
-                >
-            </div>
-
-            <div class="flex justify-end gap-2">
-                <button
-                    type="button"
-                    onclick="closeEditModalPola()"
-                    class="px-3 py-1 bg-gray-400 text-white rounded"
-                >
-                    Batal
-                </button>
-
-                <button
-                    type="submit"
-                    class="px-3 py-1 bg-green-500 text-white rounded"
-                >
-                    Simpan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-<div id="editModalKerah" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl w-96 p-6">
-        <h2 class="text-lg font-bold mb-4">Edit Jenis Kerah</h2>
-
-        <form id="editFormKerah" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-
-            <div class="mb-3">
-                <label class="text-sm">Nama Kerah</label>
-                <input
-                    type="text"
-                    name="nama"
-                    id="editNamaKerah"
-                    class="w-full border rounded px-3 py-2"
-                >
-            </div>
-
-            <div class="mb-3">
-                <label class="text-sm">Ganti Gambar (optional)</label>
-                <input
-                    type="file"
-                    name="gambar"
-                    class="w-full border rounded px-3 py-2"
-                >
-            </div>
-
-            <div class="flex justify-end gap-2">
-                <button
-                    type="button"
-                    onclick="closeEditModalKerah()"
-                    class="px-3 py-1 bg-gray-400 text-white rounded"
-                >
-                    Batal
-                </button>
-
-                <button
-                    type="submit"
-                    class="px-3 py-1 bg-green-500 text-white rounded"
-                >
-                    Simpan
-                </button>
-            </div>
         </form>
     </div>
 </div>
 
 
 <script>
-function openModal(id) {
-    document.getElementById(id).classList.remove('hidden');
+// TAB FUNCTION
+function showTab(id) {
+
+    // hide all content
+    document.querySelectorAll('.kategori-content').forEach(el => {
+        el.classList.add('hidden')
+    })
+
+    // reset all tab color
+    document.querySelectorAll('[id^="tab-"]').forEach(el => {
+        el.classList.remove('bg-blue-600','text-white')
+        el.classList.add('bg-gray-200','text-gray-700')
+    })
+
+    // show current
+    document.getElementById('content-'+id).classList.remove('hidden')
+
+    // active tab
+    let tab = document.getElementById('tab-'+id)
+    tab.classList.remove('bg-gray-200','text-gray-700')
+    tab.classList.add('bg-blue-600','text-white')
 }
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
+
+
+// MODAL
+function openModal(kategoriId){
+    document.getElementById('modalJenisSpek').classList.remove('hidden')
+    document.getElementById('kategori_id_input').value = kategoriId
 }
-</script>
 
-<script>
-function openEditModal(button) {
-    const id   = button.getAttribute('data-id');
-    const nama = button.getAttribute('data-nama');
+function closeModal(){
+    document.getElementById('modalJenisSpek').classList.add('hidden')
+}
 
-    const modal = document.getElementById('editModal');
-    const form  = document.getElementById('editForm');
-    const inputNama = document.getElementById('editNama');
+// MODAL DETAIL
+function openDetailModal(spekId, detailId, detailNama, selectedJenisOrderIds = null){
+    const modal = document.getElementById('modalJenisSpekDetail');
+    const form = document.getElementById('formDetailSpek');
+    const titleEl = document.getElementById('modalDetailTitle');
+    const spekInput = document.getElementById('detail_spek_id_input');
+    const namaInput = document.getElementById('detail_nama_input');
+    const methodInput = document.getElementById('detail_method_input');
+    const kategoriInput = document.getElementById('current_kategori_id_input');
 
-    form.action = `/spesifikasi/jahitan/${id}`;
-    inputNama.value = nama;
+    // Dapatkan kategori_id dari element spek yang sedang ditampilkan
+    const currentKategoriId = getCurrentActiveKategoriId();
+    kategoriInput.value = currentKategoriId;
+
+    spekInput.value = spekId;
+    namaInput.value = detailNama;
+
+    // Convert selectedJenisOrderIds ke array jika bukan null
+    let selectedIds = [];
+    if (selectedJenisOrderIds && Array.isArray(selectedJenisOrderIds)) {
+        selectedIds = selectedJenisOrderIds;
+    } else if (selectedJenisOrderIds) {
+        selectedIds = [selectedJenisOrderIds];
+    }
+
+    // Populate jenis_order checkbox berdasarkan kategori
+    populateJenisOrderCheckbox(currentKategoriId, selectedIds);
+
+    if (detailId) {
+        // Edit mode
+        titleEl.textContent = 'Edit Jenis Spek Detail';
+        methodInput.value = 'PUT';
+        form.action = `/jenis-spek-detail/${detailId}`;
+    } else {
+        // Create mode
+        titleEl.textContent = 'Tambah Jenis Spek Detail';
+        methodInput.value = 'POST';
+        form.action = '/jenis-spek-detail';
+    }
 
     modal.classList.remove('hidden');
-    modal.classList.add('flex');
 }
 
-function closeEditModal() {
-    const modal = document.getElementById('editModal');
-
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+function getCurrentActiveKategoriId() {
+    // Cari kategori yang sedang ditampilkan
+    const activeContent = document.querySelector('.kategori-content:not(.hidden)');
+    if (activeContent) {
+        const id = activeContent.id.replace('content-', '');
+        return id;
+    }
+    return null;
 }
+
+function populateJenisOrderCheckbox(kategoriId, selectedJenisOrderIds = []) {
+    const container = document.getElementById('jenisOrderCheckboxContainer');
+    container.innerHTML = '';
+
+    // Data jenis_order dari Blade
+    const allJenisOrder = @json($jenisOrderList);
+    
+    // Filter berdasarkan kategori (hanya yang id_kategori_jenis_order-nya sesuai)
+    const filteredJenisOrder = allJenisOrder.filter(jo => jo.id_kategori_jenis_order == kategoriId);
+
+    if (filteredJenisOrder.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 italic text-sm">Tidak ada jenis order untuk kategori ini</p>';
+        return;
+    }
+
+    filteredJenisOrder.forEach(jo => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center mb-2';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'id_jenis_order[]';
+        checkbox.value = jo.id;
+        checkbox.id = `jenis_order_${jo.id}`;
+        if (selectedJenisOrderIds && selectedJenisOrderIds.includes(jo.id)) {
+            checkbox.checked = true;
+        }
+        
+        const label = document.createElement('label');
+        label.htmlFor = `jenis_order_${jo.id}`;
+        label.className = 'ml-2 cursor-pointer text-sm';
+        label.textContent = jo.nama_jenis;
+        
+        div.appendChild(checkbox);
+        div.appendChild(label);
+        container.appendChild(div);
+    });
+}
+
+function closeDetailModal(){
+    document.getElementById('modalJenisSpekDetail').classList.add('hidden');
+}
+
+// default buka tab pertama
+@foreach($kategori as $index => $k)
+    @if($index == 0)
+        showTab({{ $k->id }})
+    @endif
+    @if($k->jenisSpek->count() > 0)
+        const firstSpekId{{ $k->id }} = {{ $k->jenisSpek->first()->id }};
+        document.getElementById(`spek-content-{{ $k->id }}-${firstSpekId{{ $k->id }}}`).classList.remove('hidden');
+    @endif
+@endforeach
 </script>
+
 <script>
-function openEditModalBahan(button) {
-    const idBahan   = button.getAttribute('data-id-bahan');
-    const namaBahan = button.getAttribute('data-nama-bahan');
+function showSpekDetail(kategoriId, spekId) {
 
-    const modalBahan = document.getElementById('editModalBahan');
-    const formBahan  = document.getElementById('editFormBahan');
-    const inputNamaBahan = document.getElementById('editNamaBahan');
+    // Sembunyikan semua detail di kategori ini
+    document.querySelectorAll(`#content-${kategoriId} [id^="spek-content-${kategoriId}-"]`)
+        .forEach(el => el.classList.add('hidden'));
 
-    formBahan.action = `/spesifikasi/bahan/${idBahan}`;
-    inputNamaBahan.value = namaBahan;
+    // reset semua tombol spek
+    document.querySelectorAll(`#content-${kategoriId} [id^="spek-tab-"]`)
+        .forEach(el => {
+            el.classList.remove('bg-blue-600','text-white');
+            el.classList.add('bg-white');
+        });
 
-    modalBahan.classList.remove('hidden');
-    modalBahan.classList.add('flex');
-}
+    // munculkan yang dipilih
+    const content = document.getElementById(`spek-content-${kategoriId}-${spekId}`);
+    if (content) content.classList.remove('hidden');
 
-function closeEditModalBahan() {
-    const modalBahan = document.getElementById('editModalBahan');
-
-    modalBahan.classList.add('hidden');
-    modalBahan.classList.remove('flex');
-}
-</script>
-<script>
-function openEditModalKerah(button) {
-    const idKerah   = button.getAttribute('data-id-kerah');
-    const namaKerah = button.getAttribute('data-nama-kerah');
-
-    const modalKerah = document.getElementById('editModalKerah');
-    const formKerah  = document.getElementById('editFormKerah');
-    const inputNamaKerah = document.getElementById('editNamaKerah');
-
-    formKerah.action = `/spesifikasi/kerah/${idKerah}`;
-    inputNamaKerah.value = namaKerah;
-
-    modalKerah.classList.remove('hidden');
-    modalKerah.classList.add('flex');
-}
-
-function closeEditModalKerah() {
-    const modalKerah = document.getElementById('editModalKerah');
-
-    modalKerah.classList.add('hidden');
-    modalKerah.classList.remove('flex');
+    // aktifkan tabnya
+    const tab = document.getElementById(`spek-tab-${spekId}`);
+    if (tab) {
+        tab.classList.remove('bg-white');
+        tab.classList.add('bg-blue-600','text-white');
+    }
 }
 </script>
-<script>
-function openEditModalPola(button) {
-    const idPola   = button.getAttribute('data-id-pola');
-    const namaPola = button.getAttribute('data-nama-pola');
 
-    const modalPola = document.getElementById('editModalPola');
-    const formPola  = document.getElementById('editFormPola');
-    const inputNamaPola = document.getElementById('editNamaPola');
-
-    formPola.action = `/spesifikasi/pola/${idPola}`;
-    inputNamaPola.value = namaPola;
-
-    modalPola.classList.remove('hidden');
-    modalPola.classList.add('flex');
-}
-
-function closeEditModalPola() {
-    const modalPola = document.getElementById('editModalPola');
-
-    modalPola.classList.add('hidden');
-    modalPola.classList.remove('flex');
-}
-</script>
 
 @endsection

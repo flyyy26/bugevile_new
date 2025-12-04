@@ -17,7 +17,7 @@
                 <select id="selectJob" class="border border-gray-300 px-3 py-2 rounded">
                     <option value="Progress Keseluruhan">Progress Keseluruhan</option>
                     @foreach ($orders as $o)
-                        <option value="{{ $o->slug }}" {{ $o->slug == $job->slug ? 'selected' : '' }}>{{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }}  - {{ $o->nama_konsumen }}</option>
+                        <option value="{{ $o->slug }}" {{ $o->slug == $job->slug ? 'selected' : '' }}>{{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }}  - {{ $o->nama_konsumen }}</option>
                     @endforeach
                 </select>
             </div>
@@ -27,7 +27,7 @@
     <div class="progress_custom relative z-10 p-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white p-6 rounded-lg shadow text-center">
-                <h2 class="text-xl font-semibold" id="nama_job">{{ $job->nama_job }} {{ $job->jenisOrder->nama_jenis }}</h2>
+                <h2 class="text-xl font-semibold" id="nama_job">{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }}</h2>
                 <p id="qty" class="text-3xl font-bold mt-2">{{ $job->qty }}</p>
             </div>
 
@@ -101,7 +101,7 @@
                     class="bg-red-500 text-black mt-2 block p-1 rounded-lg" 
                     id="sisa_print"
                 >
-                    {{ $job->sisa_print == 0 ? 'Selesai' : 'Sisa : ' . $job->sisa_print }}
+                    {{ $job->sisa_print == 0 ? 'Selesai' : 'Proses'}}
                 </span>
 
                 <h5 class="mt-2">
@@ -132,7 +132,7 @@
                         {{ $job->press }}
                     @endif
                 </p>
-                <span class="bg-green-500 text-black mt-2 block p-1 rounded-lg" id="sisa_press">{{ $job->sisa_press == 0 ? 'Selesai' : 'Sisa : ' . $job->sisa_press }}</span>
+                <span class="bg-green-500 text-black mt-2 block p-1 rounded-lg" id="sisa_press">{{ $job->sisa_press == 0 ? 'Selesai' : 'Proses'}}</span>
                 <h5 class="mt-2">
                     {{ $job->latestPressHistory->pegawai->nama ?? 'Belum' }}
                 </h5>
@@ -161,7 +161,7 @@
                         {{ $job->cutting }}
                     @endif
                 </p>
-                <span class="bg-yellow-500 text-black mt-2 block p-1 rounded-lg" id="sisa_cutting">{{ $job->sisa_cutting == 0 ? 'Selesai' : 'Sisa : ' . $job->sisa_cutting }}</span>
+                <span class="bg-yellow-500 text-black mt-2 block p-1 rounded-lg" id="sisa_cutting">{{ $job->sisa_cutting == 0 ? 'Selesai' : 'Proses' }}</span>
                 <h5 class="mt-2">
                     {{ $job->latestCuttingHistory->pegawai->nama ?? 'Belum' }}
                 </h5>
@@ -190,7 +190,7 @@
                         {{ $job->jahit }}
                     @endif
                 </p>
-                <span class="bg-blue-400 text-black mt-2 block p-1 rounded-lg" id="sisa_jahit">{{ $job->sisa_jahit == 0 ? 'Selesai' : 'Sisa : ' . $job->sisa_jahit }}</span>
+                <span class="bg-blue-400 text-black mt-2 block p-1 rounded-lg" id="sisa_jahit">{{ $job->sisa_jahit == 0 ? 'Selesai' : 'Proses'}}</span>
                 <h5 class="mt-2">
                     {{ $job->latestJahitHistory->pegawai->nama ?? 'Belum' }}
                 </h5>
@@ -219,7 +219,7 @@
                         {{ $job->finishing }}
                     @endif
                 </p>
-                <span class="bg-yellow-400 text-black mt-2 block p-1 rounded-lg" id="sisa_finishing">{{ $job->sisa_finishing == 0 ? 'Selesai' : 'Sisa : ' . $job->sisa_finishing }}</span>
+                <span class="bg-yellow-400 text-black mt-2 block p-1 rounded-lg" id="sisa_finishing">{{ $job->sisa_finishing == 0 ? 'Selesai' : 'Proses'}}</span>
                 <h5 class="mt-2">
                     {{ $job->latestFinishingHistory->pegawai->nama ?? 'Belum' }}
                 </h5>
@@ -248,7 +248,7 @@
                         {{ $job->packing }}
                     @endif
                 </p>
-                <span class="bg-blue-400 text-black mt-2 block p-1 rounded-lg" id="sisa_packing">{{ $job->sisa_packing == 0 ? 'Selesai' : 'Sisa : ' . $job->sisa_packing }}</span>
+                <span class="bg-blue-400 text-black mt-2 block p-1 rounded-lg" id="sisa_packing">{{ $job->sisa_packing == 0 ? 'Selesai' : 'Proses' }}</span>
                 <h5 class="mt-2">
                     {{ $job->latestPackingHistory->pegawai->nama ?? 'Belum' }}
                 </h5>
@@ -273,7 +273,7 @@
             <div class="mb-3">
                 <div class="flex justify-between items-center mb-0">
                     <label class="block text-xs font-medium">Nama Konsumen</label>
-                    <button onclick="closeModal()" class="text-gray-500 hover:text-black text-2xl"><iconify-icon icon="iconamoon:close-duotone"></iconify-icon></button>
+                    <button onclick="closeModalOrder()" class="text-gray-500 hover:text-black text-2xl"><iconify-icon icon="iconamoon:close-duotone"></iconify-icon></button>
                 </div>
                 <select id="select2-nama-konsumen" name="nama_konsumen" required>
                     <option value="" selected disabled>Pilih Nama Konsumen...</option>
@@ -429,10 +429,7 @@
                             @endforeach
                         </div>
                     </div>
-                    <input type="hidden" name="id_jenis_bahan" id="idJenisBahan">
-                    <input type="hidden" name="id_jenis_pola" id="idJenisPola">
-                    <input type="hidden" name="id_jenis_kerah" id="idJenisKerah">
-                    <input type="hidden" name="id_jenis_jahitan" id="idJenisJahitan">
+                    <!-- removed unused hidden spesifikasi inputs: id_jenis_bahan/id_jenis_pola/id_jenis_kerah/id_jenis_jahitan -->
 
                 </div>
                 <input type="text" 
@@ -546,7 +543,7 @@
             <!-- Nama Job -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Nama Job</label>
-                <input type="text" value="{{ $job->nama_job }} {{ $job->jenisOrder->nama_jenis }} - {{ $job->nama_konsumen }}" readonly
+                <input type="text" value="{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }} - {{ $job->nama_konsumen }}" readonly
                     class="w-full border rounded px-3 py-2 bg-gray-100">
             </div>
 
@@ -676,7 +673,7 @@
             <!-- Nama Job -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Nama Job</label>
-                <input type="text" value="{{ $job->nama_job }} {{ $job->jenisOrder->nama_jenis }} - {{ $job->nama_konsumen }} (sisa print : {{ $job->sisa_print }})" readonly
+                <input type="text" value="{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }} - {{ $job->nama_konsumen }} (sisa print : {{ $job->sisa_print }})" readonly
                     class="w-full border rounded px-3 py-2 bg-gray-100">
             </div>
 
@@ -809,7 +806,7 @@
             <!-- Nama Job -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Nama Job</label>
-                <input type="text" value="{{ $job->nama_job }} {{ $job->jenisOrder->nama_jenis }} - {{ $job->nama_konsumen }} (sisa press : {{ $job->sisa_press }})" readonly
+                <input type="text" value="{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }} - {{ $job->nama_konsumen }} (sisa press : {{ $job->sisa_press }})" readonly
                     class="w-full border rounded px-3 py-2 bg-gray-100">
             </div>
 
@@ -942,7 +939,7 @@
             <!-- Nama Job -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Nama Job</label>
-                <input type="text" value="{{ $job->nama_job }} {{ $job->jenisOrder->nama_jenis }} - {{ $job->nama_konsumen }} (sisa cutting : {{ $job->sisa_cutting }})" readonly
+                <input type="text" value="{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }} - {{ $job->nama_konsumen }} (sisa cutting : {{ $job->sisa_cutting }})" readonly
                     class="w-full border rounded px-3 py-2 bg-gray-100">
             </div>
 
@@ -1075,7 +1072,7 @@
             <!-- Nama Job -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Nama Job</label>
-                <input type="text" value="{{ $job->nama_job }} {{ $job->jenisOrder->nama_jenis }} - {{ $job->nama_konsumen }} (sisa jahit : {{ $job->sisa_jahit }})" readonly
+                <input type="text" value="{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }} - {{ $job->nama_konsumen }} (sisa jahit : {{ $job->sisa_jahit }})" readonly
                     class="w-full border rounded px-3 py-2 bg-gray-100">
             </div>
 
@@ -1208,7 +1205,7 @@
             <!-- Nama Job -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Nama Job</label>
-                <input type="text" value="{{ $job->nama_job }} {{ $job->jenisOrder->nama_jenis }} - {{ $job->nama_konsumen }} (sisa finishing : {{ $job->sisa_finishing }})" readonly
+                <input type="text" value="{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }} - {{ $job->nama_konsumen }} (sisa finishing : {{ $job->sisa_finishing }})" readonly
                     class="w-full border rounded px-3 py-2 bg-gray-100">
             </div>
 
@@ -1341,7 +1338,7 @@
             <!-- Nama Job -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Nama Job</label>
-                <input type="text" value="{{ $job->nama_job }} {{ $job->jenisOrder->nama_jenis }} - {{ $job->nama_konsumen }} (sisa packing : {{ $job->sisa_packing }})" readonly
+                <input type="text" value="{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }} - {{ $job->nama_konsumen }} (sisa packing : {{ $job->sisa_packing }})" readonly
                     class="w-full border rounded px-3 py-2 bg-gray-100">
             </div>
 
@@ -2237,8 +2234,7 @@ let selectedSpecs = {
 function selectSpec(kategori, nama, id) {
     selectedSpecs[kategori] = nama;
 
-    // simpan id ke input hidden
-    document.getElementById("idJenis" + capitalize(kategori)).value = id;
+    // previously saved to hidden inputs; hidden inputs removed — no-op
 
     updateKeterangan();
     highlightSelectedButton(kategori, id);

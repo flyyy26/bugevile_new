@@ -17,7 +17,7 @@
                 <select id="selectJob" class="border border-gray-300 px-3 py-2 text-sm rounded">
                     <option value="Progress Keseluruhan">Progress Keseluruhan</option>
                     @foreach ($ordersSelect as $o)
-                        <option value="{{ $o->slug }}">{{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }}  - {{ $o->nama_konsumen }}</option>
+                        <option value="{{ $o->slug }}">{{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }}  - {{ $o->nama_konsumen }}</option>
                     @endforeach
                 </select>
             </div>
@@ -60,10 +60,10 @@
                     </p>
                     
                     <span class="bg-gray-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_setting">
-                        {{ $totals->total_sisa_setting == 0 ? 'Selesai' : 'Sisa : ' . $totals->total_sisa_setting }}
+                        {{ $totals->total_sisa_setting == 0 ? 'Selesai' : 'Proses'}}
                     </span>
                     
-                    <h5 class="mt-2">{{ $totals->latest_setting_history->pegawai->nama ?? 'Belum Ada Progress' }}</h5>
+                    <h5 class="mt-2">{{ $totals->latest_setting_history->pegawai->nama ?? 'Belum' }}</h5>
                 </div>
 
                 <!-- Total Print -->
@@ -78,8 +78,8 @@
                             {{ $totals->total_print }}
                         @endif
                     </p>
-                    <span class="bg-red-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_print">{{ $totals->total_sisa_print == 0 ? 'Selesai' : 'Sisa : ' . $totals->total_sisa_print }}</span>
-                    <h5 class="mt-2">{{ $totals->latest_print_history->pegawai->nama ?? 'Belum Ada Progress' }}</h5>
+                    <span class="bg-red-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_print">{{ $totals->total_sisa_print == 0 ? 'Selesai' : 'Proses' }}</span>
+                    <h5 class="mt-2">{{ $totals->latest_print_history->pegawai->nama ?? 'Belum' }}</h5>
                 </div>
 
                 <!-- Total Press -->
@@ -96,8 +96,8 @@
                             {{ $totals->total_press }}
                         @endif
                     </p>
-                    <span class="bg-green-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_press">{{ $totals->total_sisa_press == 0 ? 'Selesai' : 'Sisa : ' . $totals->total_sisa_press }}</span>
-                    <h5 class="mt-2">{{ $totals->latest_press_history->pegawai->nama ?? 'Belum Ada Progress' }}</h5>
+                    <span class="bg-green-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_press">{{ $totals->total_sisa_press == 0 ? 'Selesai' : 'Proses'}}</span>
+                    <h5 class="mt-2">{{ $totals->latest_press_history->pegawai->nama ?? 'Belum' }}</h5>
                 </div>
 
                 <!-- Total Cutting -->
@@ -114,8 +114,8 @@
                             {{ $totals->total_cutting }}
                         @endif
                     </p>
-                    <span class="bg-yellow-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_cutting">{{ $totals->total_sisa_cutting == 0 ? 'Selesai' : 'Sisa : ' . $totals->total_sisa_cutting }}</span>
-                    <h5 class="mt-2">{{ $totals->latest_cutting_history->pegawai->nama ?? 'Belum Ada Progress' }}</h5>
+                    <span class="bg-yellow-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_cutting">{{ $totals->total_sisa_cutting == 0 ? 'Selesai' : 'Proses'}}</span>
+                    <h5 class="mt-2">{{ $totals->latest_cutting_history->pegawai->nama ?? 'Belum' }}</h5>
                 </div>
 
                 <!-- Total Jahit -->
@@ -132,8 +132,8 @@
                             {{ $totals->total_jahit }}
                         @endif
                     </p>
-                    <span class="bg-blue-400 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_jahit">{{ $totals->total_sisa_jahit == 0 ? 'Selesai' : 'Sisa : ' . $totals->total_sisa_jahit }}</span>
-                    <h5 class="mt-2">{{ $totals->latest_jahit_history->pegawai->nama ?? 'Belum Ada Progress' }}</h5>
+                    <span class="bg-blue-400 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_jahit">{{ $totals->total_sisa_jahit == 0 ? 'Selesai' : 'Proses'}}</span>
+                    <h5 class="mt-2">{{ $totals->latest_jahit_history->pegawai->nama ?? 'Belum' }}</h5>
                 </div>
 
                 <!-- Total Finishing -->
@@ -150,8 +150,8 @@
                             {{ $totals->total_finishing }}
                         @endif
                     </p>
-                    <span class="bg-yellow-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_finishing">{{ $totals->total_sisa_finishing == 0 ? 'Selesai' : 'Sisa : ' . $totals->total_sisa_finishing }}</span>
-                    <h5 class="mt-2">{{ $totals->latest_finishing_history->pegawai->nama ?? 'Belum Ada Progress' }}</h5>
+                    <span class="bg-yellow-500 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_finishing">{{ $totals->total_sisa_finishing == 0 ? 'Selesai' : 'Proses'}}</span>
+                    <h5 class="mt-2">{{ $totals->latest_finishing_history->pegawai->nama ?? 'Belum' }}</h5>
                 </div>
 
                 <!-- Total Packing -->
@@ -168,8 +168,8 @@
                             {{ $totals->total_packing }}
                         @endif
                     </p>
-                    <span class="bg-blue-400 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_packing">{{ $totals->total_sisa_packing == 0 ? 'Selesai' : 'Sisa : ' . $totals->total_sisa_packing }}</span>
-                    <h5 class="mt-2">{{ $totals->latest_packing_history->pegawai->nama ?? 'Belum Ada Progress' }}</h5>
+                    <span class="bg-blue-400 text-black font-medium mt-2 block p-1 rounded-lg" id="sisa_packing">{{ $totals->total_sisa_packing == 0 ? 'Selesai' : 'Proses'}}</span>
+                    <h5 class="mt-2">{{ $totals->latest_packing_history->pegawai->nama ?? 'Belum' }}</h5>
                 </div>
 
             </div>
@@ -247,7 +247,7 @@
                         @endphp
                         
                         <option value="{{ $o->id }}">
-                            {{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }} - {{ $o->nama_konsumen }} | {{ \Carbon\Carbon::parse($o->created_at)->locale('id')->translatedFormat('l, d F Y') }} ({{ $statusText }})
+                            {{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }} - {{ $o->nama_konsumen }} | {{ \Carbon\Carbon::parse($o->created_at)->locale('id')->translatedFormat('l, d F Y') }} ({{ $statusText }})
                         </option>
                     @endforeach
                 </select>
@@ -397,9 +397,9 @@
                                 value="{{ $o->id }}"
                                 data-setting="{{ $o->setting }}"
                                 data-text="{{ $o->nama_job }} - {{ $o->nama_konsumen }}"
-                                data-nilai="{{ $o->jenisOrder->nilai }}"
+                                data-nilai="{{ optional($o->jenisOrder)->nilai ?? '' }}"
                             >
-                                {{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }} 
+                                {{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }} 
                                 (sisa print : {{ $o->sisa_print }}) - 
                                 {{ $o->nama_konsumen }}
                                 ({{ \Carbon\Carbon::parse($o->created_at)->locale('id')->translatedFormat('l, d F Y') }})
@@ -545,9 +545,9 @@
                                 value="{{ $o->id }}"
                                 data-setting="{{ $o->setting }}"
                                 data-text="{{ $o->nama_job }} - {{ $o->nama_konsumen }}"
-                                data-nilai-press="{{ $o->jenisOrder->nilai }}"
+                                data-nilai-press="{{ optional($o->jenisOrder)->nilai ?? '' }}"
                             >
-                                {{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }} 
+                                {{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }} 
                                 (sisa press : {{ max($o->print - $o->press, 0) }}) - 
                                 {{ $o->nama_konsumen }}
                                 ({{ \Carbon\Carbon::parse($o->created_at)->locale('id')->translatedFormat('l, d F Y') }})
@@ -694,7 +694,7 @@
                                 data-setting="{{ $o->setting }}"
                                 data-text="{{ $o->nama_job }} - {{ $o->nama_konsumen }}"
                             >
-                                {{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }} 
+                                {{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }} 
                                 (sisa cutting : {{ max($o->press - $o->cutting, 0) }}) - 
                                 {{ $o->nama_konsumen }}
                                 ({{ \Carbon\Carbon::parse($o->created_at)->locale('id')->translatedFormat('l, d F Y') }})
@@ -835,7 +835,7 @@
                                 data-setting="{{ $o->setting }}"
                                 data-text="{{ $o->nama_job }} - {{ $o->nama_konsumen }}"
                             >
-                                {{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }} 
+                                {{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }} 
                                 (sisa jahit : {{ max($o->cutting - $o->jahit, 0) }}) - 
                                 {{ $o->nama_konsumen }}
                                 ({{ \Carbon\Carbon::parse($o->created_at)->locale('id')->translatedFormat('l, d F Y') }})
@@ -976,7 +976,7 @@
                                 data-setting="{{ $o->setting }}"
                                 data-text="{{ $o->nama_job }} - {{ $o->nama_konsumen }}"
                             >
-                                {{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }} 
+                                {{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }} 
                                 (sisa finishing : {{ max($o->jahit - $o->finishing, 0) }}) - 
                                 {{ $o->nama_konsumen }}
                                 ({{ \Carbon\Carbon::parse($o->created_at)->locale('id')->translatedFormat('l, d F Y') }})
@@ -1117,7 +1117,7 @@
                                 data-setting="{{ $o->setting }}"
                                 data-text="{{ $o->nama_job }} - {{ $o->nama_konsumen }}"
                             >
-                                {{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }} 
+                                {{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }} 
                                 (sisa packing : {{ max($o->finishing - $o->packing, 0) }}) - 
                                 {{ $o->nama_konsumen }}
                                 ({{ \Carbon\Carbon::parse($o->created_at)->locale('id')->translatedFormat('l, d F Y') }})
@@ -1194,7 +1194,7 @@
                 <select id="historyJobSelect" class="border rounded px-3 py-1 text-sm bg-gray-50">
                     <option value="">Semua Job</option>
                     @foreach ($orders as $o)
-                        <option value="{{ $o->id }}">{{ $o->nama_job }} {{ $o->jenisOrder->nama_jenis }} </option>
+                        <option value="{{ $o->id }}">{{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }} </option>
                     @endforeach
                 </select>
             </div>
@@ -1391,10 +1391,7 @@
                             @endforeach
                         </div>
                     </div>
-                    <input type="hidden" name="id_jenis_bahan" id="idJenisBahan">
-                    <input type="hidden" name="id_jenis_pola" id="idJenisPola">
-                    <input type="hidden" name="id_jenis_kerah" id="idJenisKerah">
-                    <input type="hidden" name="id_jenis_jahitan" id="idJenisJahitan">
+                    <!-- removed unused hidden spesifikasi inputs: id_jenis_bahan/id_jenis_pola/id_jenis_kerah/id_jenis_jahitan -->
 
                 </div>
                 <input type="text" 
@@ -1643,7 +1640,7 @@
     const jenisOrderMap = @json(
         $ordersSelect->mapWithKeys(function($o) {
             return [
-                $o->id => $o->jenisOrder->nama_jenis
+                $o->id => optional($o->jenisOrder)->nama_jenis
             ];
         })
     );
@@ -3047,8 +3044,7 @@ let selectedSpecs = {
 function selectSpec(kategori, nama, id) {
     selectedSpecs[kategori] = nama;
 
-    // simpan id ke input hidden
-    document.getElementById("idJenis" + capitalize(kategori)).value = id;
+    // previously saved to hidden inputs; hidden inputs removed — no-op
 
     updateKeterangan();
     highlightSelectedButton(kategori, id);

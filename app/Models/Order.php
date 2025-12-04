@@ -13,11 +13,7 @@ class Order extends Model
         'setting','print','press','cutting','jahit','finishing','packing','est',
         'sisa_print','sisa_press','sisa_cutting','sisa_jahit','sisa_finishing','sisa_packing',
 
-        // Tambahan
-        'id_jenis_bahan',
-        'id_jenis_pola',
-        'id_jenis_kerah',
-        'id_jenis_jahitan'
+        // removed unused spesifikasi fields
     ];
 
     protected $casts = [
@@ -99,29 +95,15 @@ class Order extends Model
                     ->orderBy('id', 'desc');
     }
 
-    public function jenisBahan()
-    {
-        return $this->belongsTo(JenisBahan::class, 'id_jenis_bahan');
-    }
-
-    public function jenisPola()
-    {
-        return $this->belongsTo(JenisPola::class, 'id_jenis_pola');
-    }
-
-    public function jenisKerah()
-    {
-        return $this->belongsTo(JenisKerah::class, 'id_jenis_kerah');
-    }
-
-    public function jenisJahitan()
-    {
-        return $this->belongsTo(JenisJahitan::class, 'id_jenis_jahitan');
-    }
 
     public function jenisOrder()
     {
         return $this->belongsTo(JenisOrder::class, 'jenis_order_id');
+    }
+
+    public function spesifikasi()
+    {
+        return $this->hasMany(\App\Models\OrderSpesifikasi::class, 'order_id');
     }
 
 }

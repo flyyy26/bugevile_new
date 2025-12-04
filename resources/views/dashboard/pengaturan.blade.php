@@ -24,6 +24,14 @@
                 Setting Jenis
             </button>
 
+            <button
+                id="tabJob"
+                onclick="switchTab('job')"
+                class="px-4 py-2 rounded-lg bg-white text-black"
+            >
+                Jenis Job
+            </button>
+
         </div>
 
         {{-- BUTTON LOGOUT --}}
@@ -123,6 +131,74 @@
                 @endif
             </tbody>
         </table>
+    </div>
+
+    <div id="content-job" class="hidden w-full z-20 relative mt-10">
+        <div class="mb-4">
+            <button onclick="openJobCreateModal()"
+                class="px-4 py-2 bg-white ml-auto block mr-4 mb-4 text-black rounded hover:bg-white">
+                + Tambah Job
+            </button>
+        </div>
+
+        <table class="w-full text-sm border">
+            <thead class="bg-gray-800">
+                <tr>
+                    <th class="p-2 border text-white">No</th>
+                    <th class="p-2 border text-white">Nama Job</th>
+                    <th class="p-2 border text-white w-20">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($job as $jobs)
+                <tr class="{{ $loop->even ? 'bg-gray-200' : 'bg-white' }}">
+                    <td class="p-2 text-center">{{ $loop->iteration }}</td>
+                    <td class="p-2">{{ $jobs->nama_job }}</td>
+                        <td class="p-2 text-center">
+                            <div class="flex items-center gap-1">
+                                <button type="button"
+                                    onclick="openJobEditModal({{ $jobs->id }}, '{{ $jobs->nama_job }}')"
+                                    class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600">
+                                    Edit
+                                </button>
+                                <form action="{{ route('pengaturan.job.destroy', $jobs->id) }}" method="POST"
+                                    onsubmit="return confirm('Hapus job?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-700">
+                                        Hapus
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                </tr>
+                @endforeach
+
+                @if ($job->isEmpty())
+                <tr>
+                    <td colspan="4" class="text-center p-3">Belum ada data</td>
+                </tr>
+                @endif
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- JOB MODAL (create/edit) -->
+<div id="modalJob" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+    <div class="bg-white p-5 rounded shadow-lg w-96">
+        <h3 id="modalJobTitle" class="text-lg font-bold mb-3">Tambah Job</h3>
+        <form id="formJob" onsubmit="simpanJob(event)">
+            @csrf
+            <input type="hidden" id="jobId" value="">
+            <div class="mb-3">
+                <label class="text-sm">Nama Job</label>
+                <input type="text" id="jobNama" class="w-full border px-3 py-2" required>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeJobModal()" class="px-3 py-1">Batal</button>
+                <button class="bg-green-600 text-white px-3 py-1 rounded">Simpan</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -279,34 +355,58 @@
 
 <script>
 function switchTab(tab) {
-    const ongkos = document.getElementById('content-ongkos');
-    const setting = document.getElementById('content-setting');
+    const contents = {
+        ongkos: document.getElementById('content-ongkos'),
+        setting: document.getElementById('content-setting'),
+        job: document.getElementById('content-job')
+    };
 
-    const tabOngkos = document.getElementById('tabOngkos');
-    const tabSetting = document.getElementById('tabSetting');
+    const tabs = {
+        ongkos: document.getElementById('tabOngkos'),
+        setting: document.getElementById('tabSetting'),
+        job: document.getElementById('tabJob')
+    };
 
-    if (tab === 'ongkos') {
-        ongkos.classList.remove('hidden');
-        setting.classList.add('hidden');
+    // Hide all content panels
+    Object.values(contents).forEach(c => { if (c) c.classList.add('hidden'); });
 
-        tabOngkos.classList.add('bg-green-400', 'text-black');
-        tabOngkos.classList.remove('bg-white', 'text-black');
+    // Reset all tab styles (unselected)
+    Object.values(tabs).forEach(t => {
+        if (!t) return;
+        t.classList.remove('bg-green-400');
+        t.classList.add('bg-white');
+    });
 
-        tabSetting.classList.remove('bg-green-400', 'text-black');
-        tabSetting.classList.add('bg-white', 'text-black');
+    // Show selected content and mark selected tab
+    if (contents[tab]) contents[tab].classList.remove('hidden');
+    if (tabs[tab]) {
+        tabs[tab].classList.add('bg-green-400');
+        tabs[tab].classList.remove('bg-white');
     }
-
-    if (tab === 'setting') {
-        setting.classList.remove('hidden');
-        ongkos.classList.add('hidden');
-
-        tabSetting.classList.add('bg-green-400', 'text-black');
-        tabSetting.classList.remove('bg-white', 'text-black');
-
-        tabOngkos.classList.remove('bg-green-400', 'text-black');
-        tabOngkos.classList.add('bg-white', 'text-black');
+    // Persist selected tab so page reloads keep the same tab
+    try {
+        localStorage.setItem('pengaturanActiveTab', tab);
+    } catch (e) {
+        // ignore
     }
 }
+</script>
+<script>
+    // Restore last active tab after page load (if any)
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const saved = localStorage.getItem('pengaturanActiveTab');
+            if (saved && ['ongkos','setting','job'].includes(saved)) {
+                switchTab(saved);
+                return;
+            }
+        } catch (e) {
+            // ignore localStorage errors
+        }
+
+        // default
+        switchTab('ongkos');
+    });
 </script>
 <script>
     function openEditModal(id, nama, nilai, kategori) {
@@ -418,6 +518,59 @@ function simpanKategoriBaru(event) {
     })
     .catch(err => console.error(err));
 }
+</script>
+<script>
+    function openJobCreateModal() {
+        document.getElementById('modalJobTitle').textContent = 'Tambah Job';
+        document.getElementById('jobId').value = '';
+        document.getElementById('jobNama').value = '';
+        document.getElementById('modalJob').classList.remove('hidden');
+    }
+
+    function openJobEditModal(id, nama) {
+        document.getElementById('modalJobTitle').textContent = 'Edit Job';
+        document.getElementById('jobId').value = id;
+        document.getElementById('jobNama').value = nama;
+        document.getElementById('modalJob').classList.remove('hidden');
+    }
+
+    function closeJobModal() {
+        document.getElementById('modalJob').classList.add('hidden');
+    }
+
+    function simpanJob(e) {
+        e.preventDefault();
+        const id = document.getElementById('jobId').value;
+        const nama = document.getElementById('jobNama').value.trim();
+        if (!nama) return alert('Nama job wajib diisi');
+        const url = id ? `/dashboard/pengaturan/job/${id}` : '/dashboard/pengaturan/job';
+        const method = id ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ nama_job: nama })
+        })
+        .then(async res => {
+            const text = await res.text();
+            let data = null;
+            try { data = JSON.parse(text); } catch (e) { /* not JSON */ }
+            if (res.ok && data && data.success) {
+                location.reload();
+                return;
+            }
+
+            console.error('Job save failed', res.status, text, data);
+            alert('Gagal menyimpan job. Cek console (Network/Response) untuk detail.');
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Terjadi kesalahan');
+        });
+    }
 </script>
 
 

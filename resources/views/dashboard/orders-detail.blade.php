@@ -101,6 +101,47 @@
         </div>
 
     </div>
+    
+    <!-- Spesifikasi terpilih -->
+    <div class="mt-6 bg-white p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold mb-3">Spesifikasi Terpilih</h2>
+
+        @php
+            // Group by jenis_spek id to ensure one line per spek
+            $groupedSpek = $order->spesifikasi->groupBy(function($s) {
+                return $s->jenis_spek_id;
+            });
+        @endphp
+
+        @if($groupedSpek->isEmpty())
+            <p class="text-sm text-gray-600">Belum ada spesifikasi yang dipilih untuk order ini.</p>
+        @else
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                @foreach($groupedSpek as $spekId => $items)
+                    @php
+                        $first = $items->first();
+                        $spekName = optional($first->jenisSpek)->nama_jenis_spek ?? ('Spek ' . $spekId);
+                        $detailName = optional($first->jenisSpekDetail)->nama_jenis_spek_detail ?? '-';
+                    @endphp
+
+                    <div class="p-3 border rounded flex items-center gap-3">
+                        @php $img = optional($first->jenisSpekDetail)->gambar; @endphp
+                        <div class="w-16 h-16 flex-shrink-0">
+                            @if($img)
+                                <img src="{{ asset('storage/' . $img) }}" alt="{{ $detailName }}" class="w-16 h-16 object-cover rounded" />
+                            @else
+                                <div class="w-16 h-16 bg-gray-100 flex items-center justify-center text-xs text-gray-500 rounded">No Image</div>
+                            @endif
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">{{ $spekName }}</div>
+                            <div class="text-lg font-bold">{{ $detailName }}</div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
 </div>
 <div class="px-6 py-6">
     <button id="toggleProgress" class="ml-auto block mb-4 px-4 py-2 bg-blue-600 text-white rounded">

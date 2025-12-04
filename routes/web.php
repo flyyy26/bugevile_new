@@ -12,15 +12,7 @@ use App\Http\Controllers\JenisBahanController;
 use App\Http\Controllers\JenisPolaController;
 use App\Http\Controllers\JenisKerahController;
 use App\Http\Controllers\JenisJahitanController;
-
-Route::get('/dashboard/spesifikasi', function () {
-    return view('dashboard.spesifikasi', [
-        'bahan' => \App\Models\JenisBahan::all(),
-        'pola' => \App\Models\JenisPola::all(),
-        'kerah' => \App\Models\JenisKerah::all(),
-        'jahitan' => \App\Models\JenisJahitan::all()
-    ]);
-});
+use App\Http\Controllers\SpesifikasiController;
 
 Route::get('/dashboard/orders', [OrderController::class, 'index']);
 Route::post('/dashboard/orders/store', [OrderController::class, 'store'])->name('orders.store');
@@ -37,6 +29,11 @@ Route::get('/dashboard/orders-detail', function () {
 Route::middleware(['auth'])->prefix('/dashboard/pengaturan')->group(function () {
     Route::get('/', [PengaturanHargaController::class, 'index'])->name('harga.index');
     Route::post('/update/{field}', [PengaturanHargaController::class, 'update'])->name('harga.update');
+    // Job CRUD for Pengaturan (create, update, delete)
+    Route::post('/job', [PengaturanHargaController::class, 'storeJob'])->name('pengaturan.job.store');
+    Route::post('/job/{id}', [PengaturanHargaController::class, 'updateJob'])->name('pengaturan.job.update');
+    Route::put('/job/{id}', [PengaturanHargaController::class, 'updateJob']);
+    Route::delete('/job/{id}', [PengaturanHargaController::class, 'destroyJob'])->name('pengaturan.job.destroy');
 });
 
 Route::get('/dashboard/login', [AuthController::class, 'showLogin'])->name('login');
@@ -45,6 +42,9 @@ Route::post('/dashboard/logout', [AuthController::class, 'logout'])->name('logou
 
 Route::resource('/dashboard/pegawai', PegawaiController::class);
 Route::get('/pegawai/casbon', [PegawaiController::class, 'showCasbonForm'])->name('pegawai.casbon.form');
+
+Route::get('/dashboard/spesifikasi', [SpesifikasiController::class, 'index'])
+    ->name('spesifikasi.index');
 
 Route::prefix('dashboard/orders/setting')->group(function () {
     Route::get('/', [JenisOrderController::class, 'index'])->name('jenis-order.index');
@@ -63,18 +63,7 @@ Route::post('/kategori-jenis-order/store', [KategoriJenisOrderController::class,
 
 Route::delete('/pegawai/{pegawai}', [PegawaiController::class, 'destroy'])->name('pegawai.destroy');
 
-Route::post('/spesifikasi/bahan', [JenisBahanController::class, 'store']);
-Route::delete('/spesifikasi/bahan/{id}', [JenisBahanController::class, 'destroy']);
-Route::put('/spesifikasi/bahan/{id}', [JenisBahanController::class, 'update']);
-
-Route::post('/spesifikasi/pola', [JenisPolaController::class, 'store']);
-Route::delete('/spesifikasi/pola/{id}', [JenisPolaController::class, 'destroy']);
-Route::put('/spesifikasi/pola/{id}', [JenisPolaController::class, 'update']);
-
-Route::post('/spesifikasi/kerah', [JenisKerahController::class, 'store']);
-Route::delete('/spesifikasi/kerah/{id}', [JenisKerahController::class, 'destroy']);
-Route::put('/spesifikasi/kerah/{id}', [JenisKerahController::class, 'update']);
-
-Route::post('/spesifikasi/jahitan', [JenisJahitanController::class, 'store']);
-Route::delete('/spesifikasi/jahitan/{id}', [JenisJahitanController::class, 'destroy']);
-Route::put('/spesifikasi/jahitan/{id}', [JenisJahitanController::class, 'update']);
+Route::post('/jenis-spek/store', [SpesifikasiController::class, 'storeJenisSpek'])->name('jenis_spek.store');
+Route::post('/jenis-spek-detail', [SpesifikasiController::class, 'storeJenisSpekDetail'])->name('jenis_spek_detail.store');
+Route::put('/jenis-spek-detail/{id}', [SpesifikasiController::class, 'updateJenisSpekDetail'])->name('jenis_spek_detail.update');
+Route::delete('/jenis-spek-detail/{id}', [SpesifikasiController::class, 'destroyJenisSpekDetail'])->name('jenis_spek_detail.destroy');

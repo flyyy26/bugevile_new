@@ -41,7 +41,9 @@ class PegawaiController extends Controller
         ];
 
         // 1. Ambil semua pegawai dan eager load riwayat pekerjaan (order_histories) dan casbon
-        $pegawais = Pegawai::with(['casbons', 'histories'])->get();
+        // Sertakan juga relasi order di dalam histories supaya frontend bisa mengakses
+        // nilai seperti total_lembar_print / total_lembar_press saat filtering per bulan.
+        $pegawais = Pegawai::with(['casbons', 'histories.order'])->get();
 
         $urutanPosisi = ['Setting', 'Print', 'Press', 'Cutting', 'Jahit', 'Finishing', 'Packing'];
 
@@ -123,6 +125,16 @@ class PegawaiController extends Controller
                 'totalKeseluruhan' => $totalKeseluruhanPegawai,
                 'totalCasbon' => $pegawai->casbons->sum('jumlah'),
                 'totalSisa' => $totalKeseluruhanPegawai - $pegawai->casbons->sum('jumlah'),
+                // Sertakan raw_histories di tingkat pegawai agar frontend dapat
+                // langsung memfilter berdasarkan created_at / updated_at per pegawai.
+                'raw_histories' => $pegawai->histories->map(function($h) {
+                    // Pastikan menyertakan beberapa field order penting jika tersedia
+                    $arr = $h->toArray();
+                    if ($h->relationLoaded('order') && $h->order) {
+                        $arr['order'] = $h->order->toArray();
+                    }
+                    return $arr;
+                })->all(),
             ];
 
             $grandTotalKeseluruhan += $totalKeseluruhanPegawai;

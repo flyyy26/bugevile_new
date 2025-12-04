@@ -11,4 +11,10 @@ class KategoriJenisOrder extends Model
     protected $fillable = [
         'nama',
     ];
+
+    public function jenisSpek()
+    {
+        return $this->hasMany(JenisSpek::class, 'id_kategori_jenis_order');
+    }
+
 }

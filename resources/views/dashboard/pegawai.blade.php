@@ -11,8 +11,9 @@
             <label for="monthFilter" class="mr-2 text-sm font-medium text-white">Filter Bulan:</label>
             <select id="monthFilter" class="border rounded px-2 py-1 text-sm bg-gray-50">
                 <option value="all">Semua Bulan</option>
+
                 @foreach ($availableMonths as $m)
-                    <option value="{{ $m->year }}-{{ $m->month }}">
+                    <option value="{{ $m->year }}-{{ str_pad($m->month, 2, '0', STR_PAD_LEFT) }}">
                         {{ \Carbon\Carbon::createFromDate($m->year, $m->month, 1)->translatedFormat('F Y') }}
                     </option>
                 @endforeach
@@ -47,7 +48,7 @@ $first = true;
                 @endphp
 
                 <button 
-                    class="tab-btn px-4 py-2 font-semibold border 
+                    class="tab-btn px-3 py-1 font-semibold border rounded-lg text-sm 
                         {{ $first ? 'border-black text-black' : 'border-transparent text-black' }} {{ $bgColor }}"
                     onclick="openTab('{{ $posisiSlug }}', this)">
                     {{ $posisi }}
@@ -102,7 +103,7 @@ $first = true;
                 $totalSisa = $rekapData->totalSisa;
             @endphp
 
-            <table class="min-w-full border border-gray-300 text-sm mb-6">
+            <table id="table-{{ $p->id }}" class="min-w-full border border-gray-300 text-sm mb-6" data-total-sisa="{{ $totalSisa }}">
                 <thead>
                     <tr class="bg-gray-800 text-white">
                         <th class="border px-4 py-2 text-center">Jenis Pekerjaan</th>
@@ -114,7 +115,7 @@ $first = true;
                         <th class="border px-4 py-2 text-center">Sisa</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbody-{{ $p->id }}">
                     @foreach ($rekapJenis as $r)
                         @php $rowIndex++; @endphp
                         <tr>
@@ -580,6 +581,9 @@ $first = true;
     // Data yang dibutuhkan di JS
     const globalPegawaiData = @json($rekapPerPegawai);
     const hargaMap = @json($harga);
+    // Map order data for quick lookup (used to get total lembar for Print/Press)
+    const jobMap = {};
+    (typeof jobData !== 'undefined' ? jobData : []).forEach(j => { jobMap[j.id] = j; });
 
     // Fungsi untuk merender ulang tabel berdasarkan filter bulan
     function renderTable(pegawaiId, filteredHistories) {
@@ -593,18 +597,39 @@ $first = true;
 
         filteredHistories.forEach(history => {
             const jenis = history.jenis_pekerjaan;
-            const qty = parseFloat(history.qty); // Pastikan QTY adalah float/number
+            const qty = parseFloat(history.qty) || 0; // Pastikan QTY adalah float/number
 
             if (!rekapGrouped[jenis]) {
-                rekapGrouped[jenis] = { total_qty: 0, jenis_pekerjaan: jenis };
+                rekapGrouped[jenis] = { total_qty: 0, jenis_pekerjaan: jenis, total_lembar: 0 };
             }
+
             rekapGrouped[jenis].total_qty += qty;
+
+            // Untuk Print / Press, tambahkan total lembar dari order terkait (jika tersedia)
+            if (jenis === 'Print' || jenis === 'Press') {
+                const orderId = history.order_id;
+                const order = jobMap[orderId];
+                if (order) {
+                    if (jenis === 'Print') {
+                        rekapGrouped[jenis].total_lembar += Number(order.total_lembar_print || 0);
+                    } else if (jenis === 'Press') {
+                        rekapGrouped[jenis].total_lembar += Number(order.total_lembar_press || 0);
+                    }
+                }
+            }
         });
 
         // 2. Hitung Total Harga
         let rekapJenisArray = Object.values(rekapGrouped).map(r => {
             const hargaSatuan = hargaMap[r.jenis_pekerjaan] || 0;
-            const total = r.total_qty * hargaSatuan;
+            let total = 0;
+
+            if (r.jenis_pekerjaan === 'Print' || r.jenis_pekerjaan === 'Press') {
+                total = r.total_lembar * hargaSatuan;
+            } else {
+                total = r.total_qty * hargaSatuan;
+            }
+
             newTotalKeseluruhan += total;
             return {
                 ...r,
@@ -630,6 +655,7 @@ $first = true;
             row.innerHTML = `
                 <td class="border px-3 py-2">${r.jenis_pekerjaan}</td>
                 <td class="border text-center px-3 py-2">${r.total_qty}</td>
+                <td class="border text-center px-3 py-2">${(r.total_lembar || 0)}</td>
                 <td class="border text-right px-3 py-2 font-bold">${r.total.toLocaleString('id-ID')}</td>
                 ${index === 0 ? `
                     <td class="border text-center px-3 py-2 font-bold" rowspan="${rowspan}">${newTotalKeseluruhan.toLocaleString('id-ID')}</td>
@@ -647,42 +673,65 @@ $first = true;
     // Fungsi Utama Filter
     function applyMonthFilter() {
         const filterValue = document.getElementById('monthFilter').value;
-        const [year, month] = filterValue.split('-');
-        
-        // Loop setiap pegawai untuk merender ulang tabel mereka
+
         for (const pegawaiId in globalPegawaiData) {
-            if (globalPegawaiData.hasOwnProperty(pegawaiId)) {
-                const pegawaiData = globalPegawaiData[pegawaiId];
-                
-                // Ambil riwayat mentah (raw_histories)
-                let histories = pegawaiData.raw_histories;
-                
-                let filteredHistories = histories;
+            if (!globalPegawaiData.hasOwnProperty(pegawaiId)) continue;
 
-                if (filterValue !== 'all') {
-                    filteredHistories = histories.filter(h => {
-                        const date = new Date(h.created_at);
-                        const historyMonth = date.getMonth() + 1; // getMonth() is 0-indexed
-                        const historyYear = date.getFullYear();
-
-                        return historyMonth == month && historyYear == year;
+            // Ambil daftar history untuk pegawai ini.
+            // Preferensi: top-level `raw_histories` di globalPegawaiData,
+            // jika tidak ada, coba kumpulan `raw_histories` dalam tiap `rekapJenis`.
+            // Jika masih kosong, fallback ke `allHistories` yang di-inject global.
+            let histories = [];
+            const gp = globalPegawaiData[pegawaiId];
+            if (gp) {
+                if (gp.raw_histories && Array.isArray(gp.raw_histories)) {
+                    histories = gp.raw_histories;
+                } else if (gp.rekapJenis && Array.isArray(gp.rekapJenis)) {
+                    gp.rekapJenis.forEach(g => {
+                        if (g.raw_histories && Array.isArray(g.raw_histories)) {
+                            histories = histories.concat(g.raw_histories);
+                        }
                     });
                 }
-                
-                // Render ulang tabel pegawai ini dengan data yang sudah difilter
-                renderTable(pegawaiId, filteredHistories);
             }
+
+            if (!histories.length) {
+                histories = allHistories.filter(h => parseInt(h.pegawai_id) === parseInt(pegawaiId));
+            }
+
+            // Kalau pilih Semua Bulan
+            if (filterValue === 'all') {
+                renderTable(pegawaiId, histories);
+                continue;
+            }
+
+            const [year, month] = filterValue.split('-');
+
+            const filteredHistories = histories.filter(h => {
+                if (!h) return false;
+
+                const createdDate = h.created_at ? new Date(h.created_at.replace(' ', 'T')) : null;
+                const updatedDate = h.updated_at ? new Date(h.updated_at.replace(' ', 'T')) : null;
+
+                const matches = dt => dt && dt.getFullYear().toString() === year && (dt.getMonth() + 1).toString().padStart(2, '0') === month;
+
+                return matches(createdDate) || matches(updatedDate);
+            });
+
+            renderTable(pegawaiId, filteredHistories);
         }
     }
 
-    // Listener Utama
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Tambahkan listener ke filter bulan
-        document.getElementById('monthFilter').addEventListener('change', applyMonthFilter);
-        
-        // Panggil filter pertama kali (memuat data 'Semua Bulan')
-        applyMonthFilter(); 
+        const select = document.getElementById('monthFilter');
+
+        if (select) {
+            select.addEventListener('change', applyMonthFilter);
+            applyMonthFilter();
+        }
     });
+
 </script>
 
 <script>

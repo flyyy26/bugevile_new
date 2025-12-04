@@ -106,4 +106,9 @@ class Order extends Model
         return $this->hasMany(\App\Models\OrderSpesifikasi::class, 'order_id');
     }
 
+    public function size()
+    {
+        return $this->hasOne(\App\Models\Size::class, 'order_id');
+    }
+
 }

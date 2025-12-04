@@ -217,7 +217,7 @@ class OrderController extends Controller
 
     public function detail($slug)
     {
-        $order = Order::with('spesifikasi.jenisSpek', 'spesifikasi.jenisSpekDetail')
+        $order = Order::with('spesifikasi.jenisSpek', 'spesifikasi.jenisSpekDetail', 'size')
             ->where('slug', $slug)
             ->firstOrFail();
 

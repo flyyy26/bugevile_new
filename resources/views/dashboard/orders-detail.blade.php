@@ -47,6 +47,40 @@
         </div>
 
     </div>
+    
+    <!-- Ukuran yang dipilih -->
+    <div class="mt-6 bg-white p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold mb-3">Ukuran</h2>
+
+        @php
+            $size = $order->size;
+            $sizeItems = $size ? [
+                'XS' => $size->xs ?? 0,
+                'S'  => $size->s ?? 0,
+                'M'  => $size->m ?? 0,
+                'L'  => $size->l ?? 0,
+                'XL' => $size->xl ?? 0,
+                '2XL' => $size->{'2xl'} ?? 0,
+                '3XL' => $size->{'3xl'} ?? 0,
+                '4XL' => $size->{'4xl'} ?? 0,
+                '5XL' => $size->{'5xl'} ?? 0,
+                '6XL' => $size->{'6xl'} ?? 0,
+            ] : [];
+        @endphp
+
+        @if(empty($sizeItems))
+            <p class="text-sm text-gray-600">Belum ada data ukuran untuk order ini.</p>
+        @else
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
+                @foreach($sizeItems as $label => $value)
+                    <div class="p-3 border rounded text-center">
+                        <div class="text-sm text-gray-500">{{ $label }}</div>
+                        <div class="text-lg font-bold">{{ $value }}</div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
 
     <div class="mt-5 grid grid-cols-1 md:grid-cols-5 gap-6">
 

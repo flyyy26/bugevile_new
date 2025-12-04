@@ -29,7 +29,7 @@
                     <button
                         onclick="showSpekDetail({{ $k->id }}, {{ $s->id }})"
                         id="spek-tab-{{ $s->id }}"
-                        class="p-2 py-2 shadow rounded-lg border text-center transition {{ $index === 0 ? 'bg-blue-600 text-white' : 'bg-white hover:bg-blue-50' }}"
+                        class="p-2 py-2 shadow rounded-lg border text-center transition {{ $index === 0 ? 'bg-blue-600 text-white' : 'bg-white' }}"
                     >
                         <h3 class="font-semibold text-sm">
                             {{ $s->nama_jenis_spek }}
@@ -72,14 +72,14 @@
                                             <td class="border p-2">{{ $d->nama_jenis_spek_detail }}</td>
                                             <td class="border p-2 text-center">
                                                 @if($d->gambar)
-                                                    <img src="{{ asset('storage/' . $d->gambar) }}" alt="Gambar" class="w-12 h-12 object-cover rounded">
+                                                    <img src="{{ asset('storage/' . $d->gambar) }}" alt="Gambar" class="w-12 h-12 object-cover rounded block m-auto">
                                                 @else
                                                     <span class="text-gray-400 italic text-sm">Tidak ada</span>
                                                 @endif
                                             </td>
                                             <td class="border p-2">
                                                 @if($d->jenisOrder->count())
-                                                    <div class="flex flex-wrap gap-1">
+                                                    <div class="flex flex-wrap justify-center gap-1">
                                                         @foreach($d->jenisOrder as $jo)
                                                             <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
                                                                 {{ $jo->nama_jenis }}
@@ -116,7 +116,7 @@
                             </table>
                             <button
                                 onclick="openDetailModal({{ $s->id }}, null, '')"
-                                class="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm"
+                                class="mt-3 w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm"
                             >
                                 + Tambah Detail
                             </button>

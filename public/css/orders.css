@@ -1,0 +1,589 @@
+.orders_table_container {
+    width: 100%;
+    overflow-x: auto;
+}
+.orders_table_container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.orders_table_container th, .orders_table_container td {
+    padding: .6vw .8vw;
+    text-align: left;
+    font-size: .86vw;
+}
+.orders_table_container_big th, .orders_table_container_big td {
+    padding: .4vw .6vw;
+    font-size: 1vw;
+}
+.orders_table_container th {
+    background-color: #1f2937;
+    font-weight: bold;
+    color: white;
+    border: .1vw solid rgb(75 85 99);
+}
+.orders_table_container td{
+    width: max-content;
+}
+.table_width{
+    width: 15vw;
+}
+.table_width_jenis{
+    width: 8.4vw;
+}
+.table_width_tgl{
+    width: 6vw;
+}
+.bg_gray_200 {
+    background-color: #e5e7eb;
+}
+.width_max{
+    width: max-content;
+}
+.text-center{
+    text-align: center;
+}
+.orders_table_container td a{
+    text-decoration: none;
+}
+.orders_table_container td a:hover{
+    text-decoration: underline;
+}
+.text-green{
+    color: #16a34a;
+}
+.text-red{
+    color: #dc2626;
+}
+.orders_table_container td iconify-icon {
+    font-size: 1.2vw;
+}
+.orders_table_container td span{
+    border-radius: .3vw;
+    padding: .2vw .5vw;
+    font-size: .8vw;
+    font-weight: 600;
+}
+@media print {
+    /* 1. Hapus elemen yang tidak perlu */
+    .orders_table_container .btn_orders_action,
+    .orders_table_container .btn_change,
+    .orders_table_container .btn-delete {
+        display: block !important;
+        font-size: .7vw;
+        padding: 0;
+    }
+
+    /* 2. Kendalikan tata letak tabel */
+    .orders_table_container table {
+        table-layout: fixed !important; /* Kunci lebar kolom [citation:6] */
+        width: 100% !important;         /* Paksa tabel memenuhi halaman [citation:3] */
+        border-collapse: collapse !important;
+        font-size: 10pt !important;     /* Ukuran font lebih kecil */
+        overflow: visible !important;   /* Pastikan konten terlihat */
+        word-wrap: break-word;          /* Potong teks panjang */
+    }
+
+    /* 3. Atur perilaku sel tabel */
+    .orders_table_container th,
+    .orders_table_container td {
+        padding: 3px !important;
+        border: 1px solid #ccc !important;
+        overflow: visible !important;   /* Pastikan tidak dipotong */
+        word-wrap: break-word !important; /* Bungkus teks panjang */
+        white-space: normal !important; /* Izinkan teks berbaris baru */
+    }
+
+    /* 4. Prioritaskan kolom penting, persempit yang opsional */
+    /* Kolom 'Qty', 'Hari', dan status bisa lebih sempit */
+    
+    .orders_table_container th:nth-child(7),  /* Qty */
+    .orders_table_container td:nth-child(7),
+    .orders_table_container th:nth-child(8),  /* Hari */
+    .orders_table_container td:nth-child(8),
+    .orders_table_container th:nth-child(9),  /* Deadline */
+    .orders_table_container td:nth-child(9) {
+        width: 4% !important; /* Lebih sempit */
+        min-width: 30px !important;
+    }
+
+    /* Kolom "Sisa" (S) bisa sangat sempit */
+    .orders_table_container th:nth-child(1),
+    .orders_table_container td:nth-child(1),
+    .orders_table_container th:nth-child(12), /* S Print */
+    .orders_table_container td:nth-child(12),
+    .orders_table_container th:nth-child(14), /* S Press */
+    .orders_table_container td:nth-child(14),
+    .orders_table_container th:nth-child(16), /* S Cutting */
+    .orders_table_container td:nth-child(16),
+    .orders_table_container th:nth-child(18), /* S Jahit */
+    .orders_table_container td:nth-child(18),
+    .orders_table_container th:nth-child(20), /* S Finishing */
+    .orders_table_container td:nth-child(20),
+    .orders_table_container th:nth-child(22),  /* S Packing */
+    .orders_table_container td:nth-child(22),
+    .orders_table_container th:nth-child(23),  /* S Packing */
+    .orders_table_container td:nth-child(23) {
+        width: 2% !important; /* Lebih sempit lagi */
+        min-width: 20px !important;
+        text-align: center !important;
+    }
+    .orders_table_container_small th:nth-child(1),
+    .orders_table_container_small td:nth-child(1),
+    .orders_table_container_small th:nth-child(7),
+    .orders_table_container_small td:nth-child(7){
+        width: 20% !important; /* Lebih sempit */
+        min-width: 30px !important;
+    }
+
+    /* 5. Atur halaman */
+    @page {
+        size: A4 landscape !important; /* Orientasi landscape untuk ruang lebih */
+        margin: 0.5cm !important;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important; /* Pertahankan warna */
+        print-color-adjust: exact !important;
+    }
+}
+.bg-green-100{
+    background-color: #d1fae5;
+}
+.bg-red-100{
+    background-color: #fee2e2;
+}
+.bg-red-500{
+    background-color: #dc2626 !important;
+    color: white !important;
+}
+.btn_orders_action{
+    display: flex;
+    gap: .4vw;
+    justify-content: center;
+}
+.btn_orders_action .btn-delete{
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    width: max-content;
+    font-size: 1.2vw;
+}
+.btn_orders_action button img{
+    width: 1.5vw;
+}
+.btn_change{
+    border: none;
+    outline: none;
+    font-size: .86vw;
+    border-radius: .4vw;
+    width: max-content;
+    padding: .4vw .6vw;
+    cursor: pointer;
+    background-color: #3b82f6 ;
+}
+.bg-gray-400{
+    background-color: #9ca3af;
+}
+.text-gray-600{
+    color: #4b5563;
+}
+.bg-blue-500{
+    background-color: #3b82f6;
+}
+.bg-blue-200{
+    background-color: #dde3ee;
+}
+.bg-gray-200{
+    background-color: #e5e7eb;
+}
+.hidden_print{
+    display: block;
+}
+
+.pelanggan_detail_container{
+    width: 100%;
+    padding: 1.8vw;
+}
+.pelanggan_detail_layout{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 2vw;
+    margin-bottom: 1.8vw;
+}
+
+.pegawai_page_container{
+    width: 100%;
+    padding: 1.4vw;
+}
+.pegawai_page_btn_layout{
+    display: flex;
+    gap: 1vw;
+    border-bottom: .1vw solid #d1d5db;
+    margin-bottom: 1.4vw;
+    padding-bottom: 1vw;
+}
+.pegawai_page_btn{
+    padding: .6vw 1.2vw;
+    font-size: .9vw;
+    font-weight: 600;
+    border-radius: .4vw;
+    cursor: pointer;
+    border: .1vw solid transparent;
+}
+.pegawai_page_btn_print{
+    background-color: #3b82f6;
+    width: max-content;
+    color: white;
+    display: block;
+}
+.text-black{
+    color: #000000;
+}
+.border-black{
+    border-color: #000000;
+}
+.border-transparent{
+    border-color: transparent;
+}
+.bg-yellow-500{
+    background-color: #f59e0b;
+}
+.bg-blue-500{
+    background-color: #3b82f6;
+}
+.text-blue-800{
+    color: #3b82f6;
+}
+.bg-green-500{
+    background-color: #10b981 !important;
+    color: white !important;
+}
+.bg-gray-800{
+    background-color: #1f2937;
+}
+.pegawai_page_box{
+    border-bottom: .1vw solid #6b7280;
+    margin-bottom: 1.4vw;
+    padding-bottom: 1.4vw;
+}
+.pegawai_page_box_header{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1vw;
+}
+.pegawai_page_box_header h2{
+    font-size: 1.4vw;
+    font-weight: 700;
+    color: #1f2937;
+}
+.pegawai_page_box_header_btn{
+    display: flex;
+    gap: .8vw;
+    align-items: center;
+}
+.pegawai_pagination{
+    display: flex;
+    justify-content: center;
+    gap: .6vw;
+    margin-top: 1vw;
+}
+.pegawai_pagination_btn{
+    outline: none;
+    border: .1vw solid #1f2937;
+    padding: .4vw .7vw;
+    border-radius: .4vw;
+    cursor: pointer;
+}
+.btn_table_action{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .6vw;
+}
+.btn_table_action button{
+    font-size: .9vw;
+    outline: none;
+    border: none;
+    color: #fff;
+    padding: .4vw .7vw;
+    border-radius: .4vw;
+    cursor: pointer;
+}
+.affiliator_grid_layout{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: .8vw;
+}
+
+.affiliate_detail_container{
+    width: 100%;
+    display: grid;
+    grid-template-columns: 30% 70%;
+    padding: 2vw;
+}
+.affiliate_detail_card{
+    background-color: white;
+    border-radius: 1vw;
+    border: .1vw solid #e5e7eb;
+    padding: 1.9vw 1.7vw;
+    margin-bottom: 1.5vw;
+}
+.affiliate_detail_card_one{
+    border-top: .4vw solid #3b82f6;
+}
+.affiliate_detail_card_two{
+    border-top: .4vw solid #10b981;
+}
+.affiliate_detail_card_heading{
+    text-align: center;
+    padding-bottom: 1vw;
+    margin-bottom: 1vw;
+    border-bottom: .1vw solid #e5e7eb;
+}
+.affiliate_detail_card_heading h2{
+    font-size: 1.2vw;
+    margin-bottom: .4vw;
+    color: #1f2937;
+}
+.affiliate_detail_card_heading p{
+    font-size: .9vw;
+    color: #6b7280;
+}
+.affiliate_detail_card_box{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 1.3vw;
+}
+.affiliate_detail_card_box_text{
+    width: 100%;
+}
+.affiliate_detail_card_box_text label{
+    font-size: .9vw;
+    color: #6b7280;
+    margin-bottom: .5vw;
+    display: block;
+}
+.affiliate_detail_card_box_kode{
+    text-align: center;
+    background-color: #e4ecf7;
+    width: 100%;
+    padding: .9vw 1vw;
+    border-radius: .6vw;
+}
+.affiliate_detail_card_box_kode p{
+    color: #3b82f6;
+    font-size: 1.4vw;
+    font-weight: 600;
+}
+.affiliate_detail_card_box_text a{
+    color: #16a34a;
+    font-size: 1.4;
+    font-weight: 600;
+    text-decoration: none;
+}
+.affiliate_detail_card_box_kode h3{
+    text-align: start;
+    font-size: 1.1vw;
+    font-weight: 500;
+}
+.affiliate_omset h3{
+    font-size: 1.2vw;
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: .5vw;
+}
+.affiliate_omset_box{
+    border-bottom: .1vw solid #9ca3af;
+    padding-bottom: 1vw;
+    margin-bottom: 1vw;
+}
+.affiliate_omset_box h1{
+    font-size: 2.3vw;
+    color: #16a34a;
+}
+.affiliate_omset_box p{
+    font-size: 1vw;
+    color: #6b7280;
+    font-weight: 400;
+}
+.affiliate_table_layout{
+    padding-left: 2vw;
+}
+
+.spesifikasi_container{
+    width: 100%;
+    padding: 1.8vw;
+}
+.spesifikasi_layout_btn{
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8vw;
+    margin-bottom: 1.5vw;
+    padding-bottom: 1.5vw;
+    border-bottom: .1vw solid #d1d5db;
+}
+.spesifikasi_layout_btn button{
+    font-size: 1vw;
+    outline: none;
+    border: none;
+    padding: .6vw .9vw;
+    border-radius: .6vw;
+    cursor: pointer;
+}
+.spesifikasi_layout_btn_grid{
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-gap: 1.1vw;
+    align-items: center;
+    margin-bottom: 1.5vw;
+}
+.spesifikasi_layout_btn_grid_box{
+    display: flex;
+    width: max-content;
+    gap: .3vw;
+}
+.spesifikasi_layout_btn_grid button{
+    font-size: 1vw;
+    outline: none;
+    border: none;
+    padding: .6vw .9vw;
+    border-radius: .6vw;
+    cursor: pointer;
+}
+.spesifikasi_layout_btn_grid button img{
+    width: 1.4vw;
+}
+.spesifikasi_layout_btn_grid_box button img{
+    width: 1.4vw;
+}
+.table_img{
+    position: relative;
+    width: 7vw;
+    height: 2vw;
+    position: relative;
+    border-radius: .4vw;
+    overflow: hidden;
+    display: block;
+    margin: auto;
+    border: .1vw solid #1f2937;
+}
+.table_img img{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    object-position: center;
+    object-fit: cover;
+}
+.jenis_flex{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: .6vw;
+}
+.add_detail_btn{
+    width: 100%;
+    padding: .8vw;
+    font-size: 1vw;
+    border: none;
+    outline: none;
+    color: white;
+    cursor: pointer;
+}
+.spek_checkbox_style{
+    border: .1vw solid #d1d5db;
+    padding: .6vw;
+    border-radius: .7vw;
+    overflow-y: auto;
+}
+.spek_checkbox_item{
+    display: flex;
+    align-items: center;
+    margin-bottom: .3vw;
+    gap: .2vw;
+}
+
+
+.setting_btn_layout{
+    display: flex;
+    gap: .8vw;
+    align-items: center;
+}
+.setting_btn_layout button{
+    font-size: 1vw;
+    outline: none;
+    border: none;
+    padding: .8vw 1.1vw;
+    border-radius: .4vw;
+    cursor: pointer;
+    font-weight: 600;
+}
+.ongkos_layout_container{
+    width: 100%;
+    padding: 1.8vw;
+}
+
+.setting_add_table{
+    width: 100%;
+    padding: .8vw 1vw;
+    background-color: #16a34a;
+    color: white;
+    outline: none;
+    border: none;
+    cursor: pointer;
+}
+
+.kategori_popup_style button{
+    padding: 0 1vw;
+    outline: none;
+    border: none;
+    color: white;
+    font-size: 1.2vw;
+    border-radius: .3vw;
+    background-color: #16a34a;
+    cursor: pointer;
+}
+
+.orders_icon_status{
+    width: 1.6vw;
+}
+
+/* Sembunyikan modal secara default */
+.custom-modal {
+    display: none; 
+    position: fixed;
+    z-index: 9999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 30%;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-confirm { background: #d33; color: white; padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; }
+.btn-cancel { background: #ccc; color: black; padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; margin-right: 10px; }
+
+
+@media print {
+    .hidden_print{
+        display: none;
+    }
+    .pelanggan_detail_container{
+        width: 100%;
+        padding: 1.8vw 0;
+    }
+}

@@ -106,8 +106,11 @@ class AffiliatorController extends Controller
     }
 
     // Mengupdate data
-    public function update(Request $request, Affiliate $affiliate)
+    public function update(Request $request, $id)
     {
+        $affiliate = Affiliate::findOrFail($id);
+        $affiliate->update($request->all());
+
         $request->validate([
             'nama' => 'required',
             'kode' => 'required|unique:affiliates,kode,'.$affiliate->id, 
@@ -117,42 +120,126 @@ class AffiliatorController extends Controller
             'nama_rekening' => 'nullable',
             'alamat' => 'nullable',
         ]);
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Affiliator berhasil diperbarui'
+            ]);
+        }
 
-        $affiliate->update($request->all());
-
-        return redirect()->back()->with('success', 'Afiliator berhasil diedit.');
+        // Untuk non-AJAX, redirect dengan session
+        return redirect()->back()->with('success', 'Afiliator berhasil di edit.');
     }
 
     // Menghapus data
-    public function destroy($id)
+    public function destroy($id) 
     {
-        Affiliate::destroy($id);
-        return back()->with('success', 'Affiliator dihapus');
+        try {
+            $affiliate = Affiliate::findOrFail($id);
+            $affiliateName = $affiliate->nama;
+            $affiliate->delete(); 
+
+            // Deteksi AJAX request
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Affiliator "' . $affiliateName . '" berhasil dihapus'
+                ]); 
+            }
+
+            return redirect()->route('affiliate.index')
+                ->with('success', 'Affiliator "' . $affiliateName . '" berhasil dihapus');
+            
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus affiliate: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Gagal menghapus affiliate: ' . $e->getMessage());
+        }
     }
 
     public function show($id)
     {
-        // 1. Ambil data afiliator
-        $affiliate = Affiliate::findOrFail($id);
+        try {
+            // 1. Ambil data afiliator
+            $affiliate = Affiliate::findOrFail($id);
 
-        // Ambil collection orders (eksekusi query) — eager load jenisOrder untuk menghindari N+1
-        $orders = $affiliate->ordersViaKode()->with('jenisOrder')->latest()->get();
+            // 2. Ambil orders menggunakan relasi yang benar
+            $orders = $affiliate->ordersViaKode()
+                        ->with(['jenisOrder' => function($query) {
+                            $query->select('id', 'nama_jenis', 'persentase_affiliate');
+                        }])
+                        ->latest()
+                        ->get();
 
-        // Ambil harga affiliator dari DB
-        $hargaAffiliator = HargaAffiliator::first();
-        $harga = $hargaAffiliator ? $hargaAffiliator->harga : 0;
+            // 3. Hitung total komisi dari kolom laba_bersih_affiliate
+            $totalKomisi = $orders->sum('laba_bersih_affiliate');
 
-        // Hitung total omset: jumlah order * harga per order
-        $totalOmset = $orders->count() * $harga;
+            // 4. Hitung total qty semua order (pastikan field qty ada)
+            $totalQtySemuaOrder = $orders->sum('qty') ?? 0;
 
-        // Hitung omset yang dapat dicairkan: hanya order dengan status == 1
-        $completedOrders = $orders->filter(function ($o) {
-            return (int) ($o->status ?? 1) === 1;
-        });
-        $completedCount = $completedOrders->count();
-        $completedOmset = $completedCount * $harga;
+            // 5. Filter order yang sudah selesai (status = 1)
+            $completedOrders = $orders->filter(function ($order) {
+                return (int) ($order->status ?? 0) === 1;
+            });
+            
+            $completedCount = $completedOrders->count();
+            $completedKomisi = $completedOrders->sum('laba_bersih_affiliate');
 
-        return view('dashboard.affiliator_detail', compact('affiliate', 'orders', 'harga', 'totalOmset', 'completedCount', 'completedOmset'));
+            // 6. Hitung total laba bersih untuk order selesai
+            $completedLabaBersih = $completedOrders->sum(function($order) {
+                return $order->laba_bersih ?? 0;
+            });
+
+            // 7. Debugging data
+            \Log::info("Affiliate Detail - ID: {$id}", [
+                'affiliate_name' => $affiliate->nama,
+                'affiliate_kode' => $affiliate->kode,
+                'total_orders' => $orders->count(),
+                'total_qty' => $totalQtySemuaOrder,
+                'total_komisi' => $totalKomisi,
+                'completed_orders' => $completedCount,
+                'completed_komisi' => $completedKomisi,
+                'completed_laba_bersih' => $completedLabaBersih,
+                'first_order_qty' => $orders->first() ? $orders->first()->qty : null
+            ]);
+
+            // 8. Pastikan semua variabel memiliki nilai default jika null
+            $completedCount = $completedCount ?? 0;
+            $completedKomisi = $completedKomisi ?? 0;
+            $completedLabaBersih = $completedLabaBersih ?? 0;
+            $totalKomisi = $totalKomisi ?? 0;
+            $totalQtySemuaOrder = $totalQtySemuaOrder ?? 0;
+
+            return view('dashboard.affiliator_detail', compact(
+                'affiliate', 
+                'orders', 
+                'totalKomisi',
+                'completedCount',
+                'completedKomisi',
+                'completedLabaBersih',
+                'totalQtySemuaOrder'
+            ));
+
+        } catch (\Exception $e) {
+            \Log::error("Error in AffiliateController show method: " . $e->getMessage());
+            
+            // Return dengan data kosong jika error
+            return view('dashboard.affiliator_detail', [
+                'affiliate' => Affiliate::find($id) ?? new Affiliate(),
+                'orders' => collect(),
+                'totalKomisi' => 0,
+                'completedCount' => 0,
+                'completedKomisi' => 0,
+                'completedLabaBersih' => 0,
+                'totalQtySemuaOrder' => 0
+            ]);
+        }
     }
 
     public function showLogin()

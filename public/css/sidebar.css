@@ -82,7 +82,15 @@
     position: relative;
     z-index: 10;
 }
-#hamburger{
+.sidebar_btn_layout{
+    display: flex;
+    align-items: center;
+    gap: .6vw;
+    position: absolute;
+    top: 1.3vw;
+    left: 1.3vw;
+}
+.sidebar_hamburger{
     max-width: max-content;
     background-color: white;
     transition: all 0.3s ease;
@@ -92,10 +100,42 @@
     border-radius: .4vw;
     font-size: 1vw;
     box-shadow: 0 0.2vw 0.5vw rgba(0, 0, 0, 0.1);
-    position: absolute;
-    top: 1.3vw;
-    left: 1.3vw;
     outline: none;
     border: none;
     cursor: pointer;
+}
+.submenu {
+    display: none;
+    list-style: none;
+    padding-left: 0;
+}
+
+.menu-item.open .submenu {
+    display: block;
+}
+
+.submenu a {
+    display: block;
+    padding: 10px 32px;
+    text-decoration: none;
+    color: #555;
+    font-size: 14px;
+}
+
+.submenu a:hover {
+    background: #e5e7eb;
+}
+
+.submenu a.active {
+    background: #111827;
+    color: #fff;
+    font-weight: 600;
+}
+
+.arrow {
+    transition: transform 0.3s ease;
+}
+
+.menu-item.open .arrow {
+    transform: rotate(180deg);
 }

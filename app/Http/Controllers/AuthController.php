@@ -14,9 +14,29 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('username', 'password');
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required'
+        ]);
 
-        if (Auth::attempt($credentials)) {
+        // LOGIN KARYAWAN
+        if ($request->username === 'karyawan') {
+
+            if ($request->password !== 'karyawan123') {
+                return back()->withErrors([
+                    'password' => 'Password karyawan salah'
+                ]);
+            }
+
+            Auth::loginUsingId(999); // ID user karyawan
+            $request->session()->regenerate();
+
+            return redirect('/dashboard');
+        }
+
+        // LOGIN ADMIN
+        if (Auth::attempt($request->only('username', 'password'))) {
+            $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }
 

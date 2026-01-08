@@ -71,10 +71,12 @@
                             <h2>{{ $p->nama }}</h2>
 
                             <div class="pegawai_page_box_header_btn">
-                                <button onclick="showDeletePegawaiModal({{ $p->id }}, '{{ $p->nama }}')" 
-                                        class="bg-red text-black pegawai_page_btn">
-                                    Hapus
-                                </button>
+                                @if(Auth::user()->role === 'admin')
+                                    <button onclick="showDeletePegawaiModal({{ $p->id }}, '{{ $p->nama }}')" 
+                                            class="bg-red text-black pegawai_page_btn">
+                                        Hapus
+                                    </button>
+                                @endif
 
                                 <a href="{{ route('pegawai.show', $p->id) }}">
                                     <button class="bg-gray-800 text-white pegawai_page_btn">
@@ -100,14 +102,25 @@
                         </div>
 
                         @php
-                            $rekapData = $rekapPerPegawai[$p->id];
-                            $rekapJenis = $rekapData->rekapJenis;
-                            $rowspan = $rekapJenis->count();
+                            $rekapData = $rekapPerPegawai[$p->id] ?? null;
+                            
+                            if ($rekapData) {
+                                $rekapJenis = $rekapData->rekapJenis ?? collect();
+                                $rowspan = max($rekapJenis->count(), 1); // Minimal 1 untuk rowspan
+                                
+                                $totalKeseluruhan = $rekapData->totalKeseluruhan ?? 0;
+                                $totalCasbon = $rekapData->totalCasbon ?? 0;
+                                $totalSisa = $rekapData->totalSisa ?? 0;
+                            } else {
+                                $rekapJenis = collect();
+                                $rowspan = 1;
+                                $totalKeseluruhan = 0;
+                                $totalCasbon = 0;
+                                $totalSisa = 0;
+                            }
+                            
                             $rowIndex = 0;
-
-                            $totalKeseluruhan = $rekapData->totalKeseluruhan;
-                            $totalCasbon = $rekapData->totalCasbon;
-                            $totalSisa = $rekapData->totalSisa;
+                            $hasData = $rekapJenis->count() > 0;
                         @endphp
                         <div class="orders_table_container orders_table_container_small orders_table_container_big">
                             <table id="table-{{ $p->id }}" data-total-sisa="{{ $totalSisa }}">
@@ -123,33 +136,52 @@
                                     </tr>
                                 </thead>
                                 <tbody id="tbody-{{ $p->id }}">
-                                    @foreach ($rekapJenis as $r)
-                                        @php $rowIndex++; @endphp
-                                        <tr>
-                                            <td class="border">{{ $r->jenis_pekerjaan }}</td>
-                                            <td class="border"><div class="text-center">{{ $r->total_qty }}</div></td>
-                                            <td class="border"><div class="text-center">
-                                                @if (in_array($r->jenis_pekerjaan, ['Print', 'Press']))
-                                                    {{ $r->total_lembar ?? 0 }}
-                                                @else
-                                                    -
-                                                @endif
-                                            </div></td>
-                                            <td class="border font-bold"><div class="text-center">{{ number_format($r->total) }}</div></td>
+                                    @if ($hasData)
+                                        @foreach ($rekapJenis as $r)
+                                            @php $rowIndex++; @endphp
+                                            <tr>
+                                                <td class="border">{{ $r->jenis_pekerjaan }}</td>
+                                                <td class="border"><div class="text-center">{{ $r->total_qty }}</div></td>
+                                                <td class="border"><div class="text-center">
+                                                    @if (in_array($r->jenis_pekerjaan, ['Print', 'Press']))
+                                                        {{ $r->total_lembar ?? 0 }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </div></td>
+                                                <td class="border font-bold"><div class="text-center">{{ number_format($r->total) }}</div></td>
 
-                                            @if ($rowIndex === 1)
-                                                <td class="border font-bold" rowspan="{{ $rowspan }}"><div class="text-center">
-                                                    <span id="total-keseluruhan-{{ $p->id }}">{{ number_format($totalKeseluruhan) }}</span>
-                                                </div></td>
-                                                <td class="border font-bold" rowspan="{{ $rowspan }}"><div class="text-center">
-                                                    <span id="total-casbon-{{ $p->id }}">{{ number_format($totalCasbon) }}</span>
-                                                </div></td>
-                                                <td class="border font-bold" rowspan="{{ $rowspan }}"><div class="text-center">
-                                                    <span id="total-sisa-{{ $p->id }}">{{ number_format($totalSisa) }}</span>
-                                                </div></td>
-                                            @endif
+                                                @if ($rowIndex === 1)
+                                                    <td class="border font-bold" rowspan="{{ $rowspan }}"><div class="text-center">
+                                                        <p id="total-keseluruhan-{{ $p->id }}">{{ number_format($totalKeseluruhan) }}</p>
+                                                    </div></td>
+                                                    <td class="border font-bold" rowspan="{{ $rowspan }}"><div class="text-center">
+                                                        <p id="total-casbon-{{ $p->id }}">{{ number_format($totalCasbon) }}</p>
+                                                    </div></td>
+                                                    <td class="border font-bold" rowspan="{{ $rowspan }}"><div class="text-center">
+                                                        <p id="total-sisa-{{ $p->id }}">{{ number_format($totalSisa) }}</p>
+                                                    </div></td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    @else
+                                        {{-- Tampilkan baris kosong dengan tetap menampilkan total --}}
+                                        <tr>
+                                            <td class="border">-</td>
+                                            <td class="border"><div class="text-center">0</div></td>
+                                            <td class="border"><div class="text-center">-</div></td>
+                                            <td class="border font-bold"><div class="text-center">0</div></td>
+                                            <td class="border font-bold"><div class="text-center">
+                                                <span id="total-keseluruhan-{{ $p->id }}">{{ number_format($totalKeseluruhan) }}</span>
+                                            </div></td>
+                                            <td class="border font-bold"><div class="text-center">
+                                                <span id="total-casbon-{{ $p->id }}">{{ number_format($totalCasbon) }}</span>
+                                            </div></td>
+                                            <td class="border font-bold"><div class="text-center">
+                                                <span id="total-sisa-{{ $p->id }}">{{ number_format($totalSisa) }}</span>
+                                            </div></td>
                                         </tr>
-                                    @endforeach
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -177,7 +209,9 @@
                         <th class="px-2 py-2 text-center">Tanggal</th>
                         <th class="px-2 py-2 text-center">Jumlah</th>
                         <th class="px-2 py-2 text-center">Keterangan</th>
+                        @if(Auth::user()->role === 'admin')
                         <th class="px-2 py-2 text-center">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody id="casbonHistoryTableBody">
@@ -635,6 +669,7 @@ button:disabled {
                     <td class="px-2 py-2 text-center">${formatDate(casbon.tanggal)}</td>
                     <td class="px-2 py-2 text-center font-bold">${formatNumber(casbon.jumlah)}</td>
                     <td class="px-2 py-2 text-center">${casbon.keterangan || '-'}</td>
+                    @if(Auth::user()->role === 'admin')
                     <td class="px-2 py-2 text-center">
                         <div class="btn_table_action">
                             <button onclick="deleteCasbon(${casbon.id}, ${casbon.pegawai_id})" class="bg-red">
@@ -642,6 +677,7 @@ button:disabled {
                             </button>
                         </div>
                     </td>
+                    @endif
                 </tr>
             `;
         });
@@ -652,19 +688,20 @@ button:disabled {
 
     // Fungsi untuk menghapus casbon
     function deleteCasbon(casbonId, pegawaiId) {
-        if (!confirm('Yakin ingin menghapus casbon ini?')) {
-            return;
-        }
         
         showToast('Menghapus casbon...', 'info');
         
         fetch(`/dashboard/pegawai/casbon/${casbonId}`, {
-            method: 'DELETE',
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest' 
+            },
+            body: JSON.stringify({
+                _method: 'DELETE' // Method spoofing
+            })
         })
         .then(response => response.json())
         .then(data => {
@@ -843,12 +880,16 @@ if (confirmDeletePegawaiBtn) {
         showToast('Menghapus pegawai ' + pegawaiNama + '...', 'info');
         
         fetch(`/dashboard/pegawai/${pegawaiId}`, {
-            method: 'DELETE',
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json',
+                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            body: JSON.stringify({
+                _method: 'DELETE' // Method spoofing
+            })
         })
         .then(response => response.json())
         .then(data => {
@@ -906,7 +947,7 @@ function filterByMonth(month) {
 
 // Helper Functions
 function formatNumber(num) {
-    return new Intl.NumberFormat('id-ID').format(num);
+    return new Intl.NumberFormat('id-ID').format(num || 0);
 }
 
 // Fungsi utama untuk membuat element pegawai
@@ -985,6 +1026,10 @@ function createPegawaiElement(pegawai, rekapData = null, returnElementOnly = fal
                 <button onclick="openCasbonModal(${pegawai.id}, '${safeNama}')"
                     class="bg-blue-500 text-black pegawai_page_btn">
                     + Casbon
+                </button>
+                <button onclick="openCasbonHistoryModal({{ $p->id }}, '{{ $p->nama }}')"
+                    class="bg-purple-500 text-black pegawai_page_btn">
+                    Lihat Casbon
                 </button>
             </div>
         </div>
@@ -1077,17 +1122,15 @@ function updatePegawaiElement(pegawai) {
 }
 
 function updateCasbonTotal(pegawaiId, totalCasbon, totalSisa) {
-    // Update the totals in the table
     const totalCasbonElement = document.getElementById(`total-casbon-${pegawaiId}`);
     const totalSisaElement = document.getElementById(`total-sisa-${pegawaiId}`);
-    
-    if (totalCasbonElement) {
-        totalCasbonElement.textContent = formatNumber(totalCasbon);
-    }
-    
-    if (totalSisaElement) {
-        totalSisaElement.textContent = formatNumber(totalSisa);
-    }
+
+    // Pastikan selalu angka
+    totalCasbon = parseFloat(totalCasbon) || 0;
+    totalSisa = parseFloat(totalSisa) || 0;
+
+    if (totalCasbonElement) totalCasbonElement.textContent = formatNumber(totalCasbon);
+    if (totalSisaElement) totalSisaElement.textContent = formatNumber(totalSisa);
 }
 
 // Form Submissions
@@ -1221,14 +1264,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (formCasbon) {
         formCasbon.addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.textContent;
-            
+            const originalText = submitBtn.textContent;
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Menyimpan...';
-            
+
             fetch(this.action, {
                 method: 'POST',
                 body: formData,
@@ -1237,25 +1279,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Simpan';
-                
+                submitBtn.textContent = originalText;
+
                 if (data.success) {
                     closeCasbonModal();
                     showToast('Casbon berhasil ditambahkan', 'success');
-                    
-                    // Update the casbon total instantly
                     updateCasbonTotal(data.pegawai_id, data.total_casbon, data.total_sisa);
                 } else {
                     showToast(data.message || 'Gagal menambahkan casbon', 'error');
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
+            .catch(err => {
+                console.error(err);
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Simpan';
+                submitBtn.textContent = originalText;
                 showToast('Terjadi kesalahan', 'error');
             });
         });

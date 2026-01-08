@@ -16,7 +16,9 @@ use App\Http\Controllers\JenisJahitanController;
 use App\Http\Controllers\SpesifikasiController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\AffiliatorController;
+use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\HargaAffiliatorController;
+use App\Http\Controllers\KemampuanProduksiController;
 
 Route::get('/', function () {
     return auth()->check()
@@ -34,23 +36,29 @@ Route::middleware('auth')
 
         // Dashboard utama
         Route::get('/', [DashboardController::class, 'index']);
+        // routes/web.php
+        Route::get('/total-transaksi', [DashboardController::class, 'totalTransaksi'])->name('total.transaksi');
 
         // Progress
-        Route::get('/lihat-progres', [DashboardController::class, 'lihatProgress'])->name('lihat-progres');
-        Route::get('/lihat-progres/{slug}', [DashboardController::class, 'showBySlugProgress'])->name('show-lihat-progres');
         Route::get('/get-progress/{slug}', [DashboardController::class, 'getProgress']);
         Route::post('/progress/store', [DashboardController::class, 'store'])->name('progress.store');
+
+        Route::get('/group-order', [OrderController::class, 'indexGroupOrders'])->name('group-order.index');
+        Route::get('/group-order-show/{id}', [OrderController::class, 'showGroupOrder'])->name('group-order.show');
+        Route::get('/group-order/export', [OrderController::class, 'exportGroupOrders'])->name('group-order.export');
+        Route::post('/group-order-show/{id}/mark-paid', [OrderController::class, 'markAsPaid'])->name('group-order.mark-paid');
 
         // Orders
         Route::get('/orders', [OrderController::class, 'index']);
         Route::post('/orders/store', [OrderController::class, 'store'])->name('orders.store');
+        Route::post('/orders/store-multiple', [OrderController::class, 'storeMultiple'])->name('orders.store.multiple');
         Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
         Route::post('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('/orders-detail/{slug}', [OrderController::class, 'detail']);
         Route::get('/order-totals/{slug}', [DashboardController::class, 'getOrderTotalsBySlug']);
 
         // Pengaturan harga
-        Route::prefix('pengaturan')->group(function () {
+        Route::middleware('role:admin')->prefix('pengaturan')->group(function () {
             Route::get('/', [PengaturanHargaController::class, 'index'])->name('harga.index');
             Route::post('/update-harga', [PengaturanHargaController::class, 'update'])->name('harga.update');
 
@@ -61,6 +69,10 @@ Route::middleware('auth')
             Route::put('/affiliator/{id}', [HargaAffiliatorController::class, 'update'])->name('pengaturan.affiliator.update');
         });
 
+        // routes/web.php
+        Route::post('/pembayaran/update/{pembayaran}', [PembayaranController::class, 'updateSisaBayar'])->name('pembayaran.update');
+        Route::post('/pembayaran/lunasi/{pelanggan}', [PembayaranController::class, 'lunasiSemua'])->name('pembayaran.lunasi-semua');
+
         // Pegawai
         Route::resource('pegawai', PegawaiController::class);
         Route::get('/pegawai/casbon', [PegawaiController::class, 'showCasbonForm'])->name('pegawai.casbon.form');
@@ -68,7 +80,14 @@ Route::middleware('auth')
         Route::post('/pegawai/casbon', [PegawaiController::class, 'storeCasbon'])->name('pegawai.casbon.store');
         Route::delete('/pegawai/casbon/{casbon}', [PegawaiController::class, 'deleteCasbon'])->name('pegawai.casbon.delete');
 
+        // Kemampuan Produksi Routes (SIMPEL)
+        Route::put('/kemampuan-produksi', [KemampuanProduksiController::class, 'update'])->name('kemampuan-produksi.update');
+
         // Pelanggan
+        Route::get(
+            '/nota/pelanggan/{pelanggan}',
+            [PelangganController::class, 'showNotaByPelanggan']
+        )->name('pelanggan.nota');
         Route::resource('pelanggan', PelangganController::class);
 
         // Affiliator dashboard
@@ -82,17 +101,21 @@ Route::middleware('auth')
         Route::delete('/jenis-spek-detail/{id}', [SpesifikasiController::class, 'destroyJenisSpekDetail'])->name('jenis_spek_detail.destroy');
         Route::delete('/jenis-spek/{id}', [SpesifikasiController::class, 'destroyJenisSpek'])->name('jenis_spek.destroy');
 
-        // Setting jenis order
+        // Setting jenis order 
         Route::prefix('orders/setting')->group(function () {
             Route::get('/', [JenisOrderController::class, 'index'])->name('jenis-order.index');
             Route::post('/', [JenisOrderController::class, 'store'])->name('jenis-order.store');
             Route::put('/{id}', [JenisOrderController::class, 'update'])->name('jenis-order.update');
             Route::delete('/{id}', [JenisOrderController::class, 'destroy'])->name('jenis-order.destroy');
+            Route::get('/{id}', [JenisOrderController::class, 'show'])->name('jenis-order.show');
+            Route::put('/laba/{id}', [JenisOrderController::class, 'updateLaba'])->name('laba.update');
         });
 
         // Kategori jenis order
         Route::post('/kategori-jenis-order/store', [KategoriJenisOrderController::class, 'store'])->name('kategori-jenis-order.store');
         Route::delete('/kategori-jenis-order/{id}', [KategoriJenisOrderController::class, 'destroy'])->name('kategori-jenis-order.destroy');
+
+        Route::get('/{slug}', [DashboardController::class, 'showBySlug'])->name('dashboard.job');
 });
 
 Route::get('/afiliasi', [AffiliatorController::class, 'showLogin'])->name('affiliate.login');
@@ -103,3 +126,6 @@ Route::get('/afiliasi-detail/{id}', [AffiliatorController::class, 'showDetail'])
     ->name('afiliasi-detail');
 
 Route::post('/afiliasi-logout', [AffiliatorController::class, 'logout'])->name('affiliate.logout');
+
+Route::get('/lihat-progres', [DashboardController::class, 'lihatProgress'])->name('lihat-progres');
+Route::get('/lihat-progres/{slug}', [DashboardController::class, 'showBySlugProgress'])->name('show-lihat-progres');

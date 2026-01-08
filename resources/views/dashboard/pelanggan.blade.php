@@ -18,7 +18,7 @@
             <thead>
                 <tr>
                     <th><div class="text-center">Nama Pelanggan</div></th>
-                    <th><div class="text-center">Affiliator</div></th>
+                    <th><div class="text-center">Sales</div></th>
                     <th><div class="text-center">No Telepon</div></th>
                     <th><div class="text-center">Alamat</div></th>
                     <th><div class="text-center">Aksi</div></th>
@@ -50,7 +50,7 @@
                                 <button
                                     class="bg-blue-500"
                                     onclick="openEditModal({{ $o->id }}, '{{ $o->nama }}', '{{ $o->no_hp }}', '{{ $o->alamat }}')"
-                                >
+                                > 
                                     Edit
                                 </button>
 

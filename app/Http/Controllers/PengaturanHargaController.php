@@ -5,16 +5,31 @@ use App\Models\HargaJenisPekerjaan;
 use App\Models\KategoriJenisOrder;
 use App\Models\JenisOrder;
 use App\Models\Job;
+use App\Models\Affiliate;
 use App\Models\HargaAffiliator;
 use Illuminate\Http\Request;
+use App\Models\KemampuanProduksi;
 
 class PengaturanHargaController extends Controller
 {
     public function index()
     {
+        $affiliates = Affiliate::latest()
+                        ->withCount('ordersViaKode') 
+                        ->get();
+        
+        $print = KemampuanProduksi::where('nama_kemampuan', 'Print')->first();
+        $packingFinishing = KemampuanProduksi::where('nama_kemampuan', 'Packing & Finishing')->first();
+        
+        $kode = $this->generateUniqueCode();
+
+        $kategori = KategoriJenisOrder::with('jenisSpek.detail')->get();
+        
+        // Ambil semua jenis_order dengan relasi kategorinya untuk ditampilkan di modal
+        $jenisOrderList = \App\Models\JenisOrder::all();
         // Ambil harga ID 1
         $kategoriList = KategoriJenisOrder::all();
-        $jenisOrders = JenisOrder::all();
+        $jenisOrders = JenisOrder::with(['hargaJenisPekerjaan'])->get();
         $job = Job::all();
         $harga = HargaJenisPekerjaan::find(1);
         $komisi = HargaAffiliator::firstOrNew([], ['harga' => 0]);
@@ -23,6 +38,8 @@ class PengaturanHargaController extends Controller
         if (!$komisi->exists) {
             $komisi->save();
         }
+
+        $persentaseKomisi = $komisi->harga ?? 0;
 
         // Jika belum ada, buat default
         if (!$harga) {
@@ -37,7 +54,25 @@ class PengaturanHargaController extends Controller
             ]);
         }
 
-        return view('dashboard.pengaturan', compact('harga', 'kategoriList', 'jenisOrders', 'job', 'komisi'));
+        return view('dashboard.pengaturan', compact('print', 'packingFinishing', 'harga', 'kategori', 'jenisOrderList', 'kategoriList', 'jenisOrders', 'job', 'komisi','persentaseKomisi', 'affiliates', 'kode' ));
+    }
+    private function generateUniqueCode()
+    {
+        do {
+            // 1. Ambil 2 Huruf Acak Kapital
+            $letters = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 2);
+            
+            // 2. Ambil 3 Angka Acak
+            $numbers = substr(str_shuffle('0123456789'), 0, 3);
+
+            // 3. Gabungkan dan Acak Posisi (agar tidak selalu huruf duluan)
+            $code = str_shuffle($letters . $numbers);
+            
+            // 4. Cek di database apakah kode sudah ada
+            // Loop akan terus berjalan jika exists() mengembalikan true
+        } while (Affiliate::where('kode', 'LIKE', $code . '%')->exists());
+
+        return $code;
     }
 
     public function update(Request $request) // Hapus , $field

@@ -16,20 +16,17 @@ class DashboardAccess
      */
     public function handle($request, Closure $next)
     {
-        if (!Auth::check()) {
-
-            // JIKA AJAX / API
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized'
-                ], 401);
-            }
-
-            // JIKA HALAMAN BIASA
-            return redirect()->route('dashboard.login');
+        // login admin (Auth)
+        if (Auth::check()) {
+            return $next($request);
         }
 
-        return $next($request);
+        // login karyawan (session manual)
+        if (session('login') === true && session('role') === 'karyawan') {
+            return $next($request);
+        }
+
+        return redirect('/dashboard/login');
     }
+
 }

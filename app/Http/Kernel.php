@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'affiliate.auth' => \App\Http\Middleware\AffiliateAuth::class,
         'dashboard.access' => \App\Http\Middleware\DashboardAccess::class,
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
 }

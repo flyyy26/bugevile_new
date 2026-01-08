@@ -4,111 +4,377 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Affiliate</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+        /* Font Readex Pro */
+        @font-face {
+            font-family: 'Readex Pro';
+            font-style: normal;
+            font-weight: 160 700;
+            font-display: swap;
+            src: url(../font/SLXYc1bJ7HE5YDoGPuzj_dh8uc7wUy8ZQQyX2Iw1ZEzMhQ.woff2) format('woff2');
+            unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
         }
+        /* vietnamese */
+        @font-face {
+            font-family: 'Readex Pro';
+            font-style: normal;
+            font-weight: 160 700;
+            font-display: swap;
+            src: url(../font/SLXYc1bJ7HE5YDoGPuzj_dh8uc7wUy8ZQQyX2Iw_ZEzMhQ.woff2) format('woff2');
+            unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+        }
+        /* latin-ext */
+        @font-face {
+            font-family: 'Readex Pro';
+            font-style: normal;
+            font-weight: 160 700;
+            font-display: swap;
+            src: url(../font/SLXYc1bJ7HE5YDoGPuzj_dh8uc7wUy8ZQQyX2Iw-ZEzMhQ.woff2) format('woff2');
+            unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+        }
+        /* latin */
+        @font-face {
+            font-family: 'Readex Pro';
+            font-style: normal;
+            font-weight: 160 700;
+            font-display: swap;
+            src: url(../font/SLXYc1bJ7HE5YDoGPuzj_dh8uc7wUy8ZQQyX2IwwZEw.woff2) format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
+        /* Reset dan Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Readex Pro", sans-serif;
+            text-transform: uppercase !important;
+        }
+
+        body {
+            background-image: url(../images/wood.jpg);
+    background-position: center;
+    background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Login Card */
         .login-card {
+            width: 100%;
+            max-width: 420px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
         }
+
+        /* Header */
+        .login-header {
+            background: linear-gradient(135deg, #bb0009ff 0%, #4d0609ff 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .icon-circle {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+
         .affiliate-icon {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: 36px;
+            background: linear-gradient(135deg, #bb0009ff 0%, #4d0609ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        /* Form */
+        .login-form {
+            padding: 40px 30px;
+        }
+
+        /* Alert Messages */
+        .alert {
+            margin-bottom: 30px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .alert-error {
+            background-color: #fed7d7;
+            border: 1px solid #fc8181;
+        }
+
+        .alert-success {
+            background-color: #c6f6d5;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert i {
+            margin-right: 12px;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .alert-error i {
+            color: #e53e3e;
+        }
+
+        .alert-success i {
+            color: #38a169;
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-label {
+            display: block;
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 16px 16px 50px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: #bb0009ff;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        .input-help {
+            color: #718096;
+            font-size: 12px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-help i {
+            margin-right: 6px;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #bb0009ff 0%, #4d0609ff 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #a52026ff 0%, #7e1b20ff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn i {
+            margin-right: 10px;
+        }
+
+        /* Footer Links */
+        .login-footer {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .back-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #4299e1;
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        /* Card Footer */
+        .card-footer {
+            background-color: #f7fafc;
+            padding: 20px 30px;
+            text-align: center;
+        }
+
+        .footer-text {
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .footer-text i {
+            margin-right: 6px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-card {
+                border-radius: 16px;
+            }
+            
+            .login-header {
+                padding: 30px 20px;
+            }
+            
+            .login-form {
+                padding: 30px 20px;
+            }
+            
+            .login-header h1 {
+                font-size: 24px;
+            }
+            
+            .icon-circle {
+                padding: 16px;
+            }
+            
+            .affiliate-icon {
+                font-size: 30px;
+            }
+        }
     </style>
 </head>
-<body class="flex items-center justify-center p-4">
-    <div class="login-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+<body>
+    <div class="login-card">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center">
-            <div class="inline-block p-4 bg-white rounded-full mb-4">
-                <i class="fas fa-user-tie text-4xl affiliate-icon"></i>
+        <div class="login-header">
+            <div class="icon-circle">
+                <i class="fas fa-user-tie affiliate-icon"></i>
             </div>
-            <h1 class="text-3xl font-bold text-white">Affiliate Login</h1>
-            <p class="text-blue-100 mt-2">Masukkan kode affiliate Anda</p>
+            <h1>Afiliasi Login</h1>
+            <p>Masukkan kode afiliasi Anda</p>
         </div>
 
         <!-- Form -->
-        <div class="p-8">
+        <div class="login-form">
             @if($errors->any())
-                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div class="flex items-center">
-                        <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
-                        <div>
-                            @foreach($errors->all() as $error)
-                                <p class="text-red-700 text-sm">{{ $error }}</p>
-                            @endforeach
-                        </div>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div>
+                        @foreach($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
                     </div>
                 </div>
             @endif
 
             @if(session('success'))
-                <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                        <p class="text-green-700">{{ session('success') }}</p>
-                    </div>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <p>{{ session('success') }}</p>
                 </div>
             @endif
 
             <form method="POST" action="{{ route('affiliate.login.process') }}">
                 @csrf
                 
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="kode">
-                        Kode Affiliate
+                <div class="form-group">
+                    <label class="form-label" for="kode">
+                        Kode Afiliasi
                     </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-key text-gray-400"></i>
-                        </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-key input-icon"></i>
                         <input 
                             type="text" 
                             id="kode" 
                             name="kode" 
                             required
-                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                            placeholder="Masukkan kode affiliate"
+                            class="form-input"
+                            placeholder="Masukkan kode afiliasi"
                             autofocus
                             value="{{ old('kode') }}"
                         >
                     </div>
-                    <p class="text-gray-500 text-xs mt-2 flex items-center">
-                        <i class="fas fa-info-circle mr-1"></i>
+                    <p class="input-help">
+                        <i class="fas fa-info-circle"></i>
                         Contoh: ABC-12345
                     </p>
                 </div>
 
                 <button 
                     type="submit"
-                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-300 flex items-center justify-center"
+                    class="submit-btn"
                 >
-                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    <i class="fas fa-sign-in-alt"></i>
                     Masuk ke Dashboard
                 </button>
 
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <div class="text-center">
-                        <a href="/" class="text-gray-600 hover:text-blue-600 text-sm flex items-center justify-center">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Kembali ke halaman utama
-                        </a>
-                    </div>
+                <div class="login-footer">
+                    <a href="/" class="back-link">
+                        <i class="fas fa-arrow-left"></i>
+                        Kembali ke halaman utama
+                    </a>
                 </div>
             </form>
         </div>
 
         <!-- Footer -->
-        <div class="bg-gray-50 px-8 py-4 text-center">
-            <p class="text-gray-500 text-sm">
-                <i class="fas fa-shield-alt mr-1"></i>
+        <div class="card-footer">
+            <p class="footer-text">
+                <i class="fas fa-shield-alt"></i>
                 Akses terbatas hanya untuk affiliate terdaftar
             </p>
         </div>

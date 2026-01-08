@@ -15,10 +15,14 @@ use App\Models\JenisJahitan;
 use App\Models\JenisSpek;
 use App\Models\JenisSpekDetail;
 use App\Models\Size;
+use App\Models\GroupOrder;
+use App\Models\Pembayaran;
 use App\Models\OrderSpesifikasi;
 use App\Models\Pelanggan;
+use App\Models\KemampuanProduksi;
 use App\Models\Affiliate;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -26,13 +30,28 @@ class OrderController extends Controller
     {
         $jenisOrders = JenisOrder::all();
         $jobs = Job::latest()->get();
-        $orders = Order::with('affiliates')->latest()->get();
+
+        $perPage = request('per_page', 6);
+        
+        // Get current page from request
+        $currentPage = request('page', 1);
+        
+        // PAGINATION
+        $orders = Order::with('affiliates')
+                ->latest()
+                ->paginate($perPage)
+                ->withQueryString();
+        
+        // Calculate starting number based on page
+        $startNumber = ($currentPage - 1) * $perPage;
+        
         $kategoriList = KategoriJenisOrder::with('jenisSpek.jenisSpekDetail')->get();
         $uniqueJobs = Order::distinct('nama_job')->pluck('nama_job')->sort();
         $totals = OrderTotal::first();
         $uniqueKonsumens = Order::distinct('nama_konsumen')->pluck('nama_konsumen')->sort();
+        
         $pelanggans = Pelanggan::with(['affiliate' => function($query) {
-        $query->select('id', 'kode', 'nama'); // Hanya ambil kolom yang diperlukan
+            $query->select('id', 'kode', 'nama');
         }])->get();
 
         $jenisBahan = JenisBahan::all();
@@ -40,10 +59,7 @@ class OrderController extends Controller
         $jenisKerah = JenisKerah::all();
         $jenisJahitan = JenisJahitan::all();
         
-        // Load jenis_spek dengan detail yang di-eager-load
         $jenisSpek = JenisSpek::with('detail.jenisOrder')->get();
-        
-        // Load jenis_spek_detail dengan relasi jenisOrder untuk filter di frontend
         $jenisSpekDetail = JenisSpekDetail::with('jenisOrder')->get();
 
         return view('dashboard.orders', compact(
@@ -60,202 +76,469 @@ class OrderController extends Controller
             'jenisJahitan',
             'jenisSpek',
             'jenisSpekDetail',
-            'pelanggans'
+            'pelanggans',
+            'startNumber' // Add this
         ));
     }
 
-
-   public function store(Request $request)
+    public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama_job' => 'required',
-            'nama_konsumen' => 'required',
-            'keterangan' => 'nullable',
-            'xs' => 'nullable|integer',
-            's' => 'nullable|integer',
-            'm' => 'nullable|integer',
-            'l' => 'nullable|integer',
-            'xl' => 'nullable|integer',
-            '2xl' => 'nullable|integer',
-            '3xl' => 'nullable|integer',
-            '4xl' => 'nullable|integer',
-            '5xl' => 'nullable|integer',
-            '6xl' => 'nullable|integer',
-            'jenis_order_id' => 'required|exists:jenis_order,id',
-            'speks' => 'nullable|array',
-            'speks.*' => 'nullable|integer|exists:jenis_spek_detail,id',
-            'affiliator_kode' => 'nullable|string',
-        ]);
-
-        // **Cari ID affiliate dari kode yang diinput user**
-        $affiliateId = null;
-        $affiliatorKode = $validated['affiliator_kode'] ?? null;
-        
-        if ($affiliatorKode) {
-            $affiliate = \App\Models\Affiliate::where('kode', $affiliatorKode)->first();
-            if ($affiliate) {
-                $affiliateId = $affiliate->id; // Ambil ID-nya, bukan kode
-                \Log::info("Kode affiliate '{$affiliatorKode}' ditemukan dengan ID: {$affiliateId}");
+        try {
+            \Log::info('=== ORDER STORE PROCESS STARTED ===');
+            
+            // Jika data dikirim sebagai JSON
+            if ($request->isJson()) {
+                $data = $request->json()->all();
             } else {
-                \Log::warning("Kode affiliate '{$affiliatorKode}' tidak ditemukan di database");
-                // Opsional: return error jika kode tidak valid
-                // return back()->withErrors(['affiliator_kode' => 'Kode affiliate tidak ditemukan'])->withInput();
+                $data = $request->all();
             }
-        }
 
-        // Handle pelanggan
-        if (is_numeric($request->nama_konsumen)) {
-            // **PELANGGAN DARI DROPDOWN (sudah ada di database)**
-            $pelanggan = Pelanggan::find($request->nama_konsumen);
-            
-            // Jika user input kode affiliate, update pelanggan dengan ID affiliate
-            if ($affiliateId && $pelanggan) {
-                $pelanggan->id_affiliates = $affiliateId;
-                $pelanggan->save();
-                \Log::info("Updated pelanggan {$pelanggan->id} dengan id_affiliates: {$affiliateId}");
+            \Log::info('Raw data received:', $data);
+
+            // Validasi data dasar dengan Validator facade - PERBAIKI VALIDASI PEMBAYARAN
+            $validator = Validator::make($data, [
+                'nama_job' => 'required|string',
+                'nama_konsumen' => 'required',
+                'grand_total' => 'required|numeric|min:0',
+                'affiliator_kode' => 'nullable|string',
+                
+                // Data pembayaran - diubah menjadi nullable
+                'dp_amount' => 'nullable|numeric|min:0',
+                'sisa_bayar' => 'nullable|numeric|min:0',
+                'harus_dibayar' => 'nullable|numeric|min:0',
+                'payment_status' => 'nullable|boolean',
+                
+                // Data per order
+                'jenis_order_id' => 'required|array',
+                'jenis_order_id.*' => 'required|exists:jenis_order,id',
+                
+                'kategori_id' => 'required|array',
+                'kategori_id.*' => 'required|exists:kategori_jenis_order,id',
+                
+                'nama_jenis' => 'required|array',
+                'nama_jenis.*' => 'required|string',
+                
+                'harga_jual_satuan' => 'required|array',
+                'harga_jual_satuan.*' => 'required|numeric|min:0',
+                
+                'harga_jual_total' => 'required|array',
+                'harga_jual_total.*' => 'required|numeric|min:0',
+                
+                'speks' => 'required|array',
+                'speks.*' => 'nullable|string',
+                
+                'qty' => 'required|array',
+                'qty.*' => 'required|integer|min:0',
+                
+                'sizes' => 'required|array',
+            ]);
+
+            // Cek jika validasi gagal
+            if ($validator->fails()) {
+                \Log::error('Validation failed:', $validator->errors()->toArray());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal: ' . implode(', ', $validator->errors()->all())
+                ], 422);
             }
+
+            $validated = $validator->validated();
+
+            \Log::info('Validated data:', $validated);
+
+            // **Cari ID affiliate dari kode yang diinput user**
+            $affiliateId = null;
+            $affiliatorKode = $validated['affiliator_kode'] ?? null;
             
-            // Jika user TIDAK input kode affiliate, ambil dari yang sudah ada
-            if (!$affiliatorKode && $pelanggan && $pelanggan->id_affiliates) {
-                $affiliateId = $pelanggan->id_affiliates;
-                $affiliate = \App\Models\Affiliate::find($affiliateId);
-                $affiliatorKode = $affiliate ? $affiliate->kode : null;
-                \Log::info("Menggunakan affiliate existing pelanggan: {$affiliatorKode}");
+            if ($affiliatorKode) {
+                $affiliate = \App\Models\Affiliate::where('kode', $affiliatorKode)->first();
+                if ($affiliate) {
+                    $affiliateId = $affiliate->id;
+                    \Log::info("Kode affiliate '{$affiliatorKode}' ditemukan dengan ID: {$affiliateId}");
+                } else {
+                    \Log::warning("Kode affiliate '{$affiliatorKode}' tidak ditemukan di database");
+                }
             }
-        } else {
-            // **PELANGGAN BARU (input manual)**
-            // Cari dulu apakah pelanggan dengan nama ini sudah ada
-            $pelanggan = Pelanggan::where('nama', $request->nama_konsumen)->first();
+
+            // Handle pelanggan
+            $pelanggan = null;
+            $pelangganId = null;
             
-            if ($pelanggan) {
-                // Pelanggan sudah ada, update affiliate-nya jika ada
-                if ($affiliateId) {
+            \Log::info("nama_konsumen value: " . $validated['nama_konsumen']);
+            
+            if (is_numeric($validated['nama_konsumen'])) {
+                $pelangganId = $validated['nama_konsumen'];
+                $pelanggan = Pelanggan::find($pelangganId);
+                
+                if (!$pelanggan) {
+                    throw new \Exception("Pelanggan dengan ID {$pelangganId} tidak ditemukan");
+                }
+                
+                \Log::info("Found existing pelanggan by ID: {$pelanggan->id} - {$pelanggan->nama}");
+                
+                if ($affiliateId && $pelanggan) {
                     $pelanggan->id_affiliates = $affiliateId;
                     $pelanggan->save();
-                    \Log::info("Updated pelanggan existing {$pelanggan->id} dengan id_affiliates: {$affiliateId}");
+                    \Log::info("Updated pelanggan {$pelanggan->id} dengan id_affiliates: {$affiliateId}");
+                }
+                
+                if (!$affiliatorKode && $pelanggan && $pelanggan->id_affiliates) {
+                    $affiliateId = $pelanggan->id_affiliates;
+                    $affiliate = \App\Models\Affiliate::find($affiliateId);
+                    $affiliatorKode = $affiliate ? $affiliate->kode : null;
+                    \Log::info("Menggunakan affiliate existing pelanggan: {$affiliatorKode}");
                 }
             } else {
-                // Pelanggan benar-benar baru, buat dengan affiliate
-                $pelanggan = Pelanggan::create([
-                    'nama' => $request->nama_konsumen,
-                    'id_affiliates' => $affiliateId // Simpan ID, bukan kode
-                ]);
-                \Log::info("Created pelanggan baru dengan id_affiliates: {$affiliateId}");
+                $pelanggan = Pelanggan::where('nama', $validated['nama_konsumen'])->first();
+                
+                if ($pelanggan) {
+                    $pelangganId = $pelanggan->id;
+                    \Log::info("Found existing pelanggan by name: {$pelanggan->id} - {$pelanggan->nama}");
+                    
+                    if ($affiliateId) {
+                        $pelanggan->id_affiliates = $affiliateId;
+                        $pelanggan->save();
+                        \Log::info("Updated pelanggan existing {$pelanggan->id} dengan id_affiliates: {$affiliateId}");
+                    }
+                } else {
+                    $pelanggan = Pelanggan::create([
+                        'nama' => $validated['nama_konsumen'],
+                        'id_affiliates' => $affiliateId
+                    ]);
+                    $pelangganId = $pelanggan->id;
+                    \Log::info("Created pelanggan baru dengan id: {$pelangganId}, id_affiliates: {$affiliateId}");
+                }
             }
-        }
 
-        // Hitung qty
-        $qty =
-            ($request->xs ?? 0) +
-            ($request->s ?? 0) +
-            ($request->m ?? 0) +
-            ($request->l ?? 0) +
-            ($request->xl ?? 0) +
-            ($request->input('2xl') ?? 0) +
-            ($request->input('3xl') ?? 0) +
-            ($request->input('4xl') ?? 0) +
-            ($request->input('5xl') ?? 0) +
-            ($request->input('6xl') ?? 0);
+            // Mulai database transaction untuk konsistensi data
+            DB::beginTransaction();
 
-        $hari = $qty / 30;
-        $hari = round($hari, 1);
-        $deadline = $hari;
+            $groupOrder = GroupOrder::create([
+                'kode_group' => GroupOrder::generateKodeGroup(),
+                'pelanggan_id' => $pelangganId,
+                'affiliate_id' => $affiliateId,
+                'nama_job' => $validated['nama_job'],
+                'grand_total' => $validated['grand_total'],
+                'dp_amount' => $validated['dp_amount'] ?? 0,
+                'sisa_bayar' => $validated['sisa_bayar'] ?? 0,
+                'harus_dibayar' => $validated['harus_dibayar'] ?? $validated['grand_total'],
+                'payment_status' => $validated['payment_status'] ?? false,
+                'keterangan' => 'Order dari multi-order form'
+            ]);
 
-        $jenisOrder = JenisOrder::find($validated['jenis_order_id']);
-        if (!$jenisOrder) {
-            return back()->withErrors(['jenis_order_id' => 'Jenis order tidak ditemukan'])->withInput();
-        }
+            // Buat atau cari job
+            $job = Job::firstOrCreate(
+                ['nama_job' => $validated['nama_job']],
+                ['nama_job' => $validated['nama_job']]
+            );
 
-        $job = Job::firstOrCreate(
-            ['nama_job' => $validated['nama_job']],
-            ['nama_job' => $validated['nama_job']]
-        );
+            // Array untuk menyimpan semua order yang dibuat
+            $createdOrders = [];
+            $savedOrderIds = [];
+            $totalOrders = count($validated['jenis_order_id']);
 
-        // Buat order
-        $order = Order::create([
-            'nama_job' => $validated['nama_job'],
-            'nama_konsumen' => $pelanggan->nama,
-            'keterangan' => $validated['keterangan'] ?? null,
-            'qty' => $qty,
-            'hari' => $hari,
-            'est' => $hari,
-            'deadline' => $deadline,
-            'jenis_order_id' => $validated['jenis_order_id'],
-            'setting' => false,
-            'status' => false,
-            'print' => 0,
-            'press' => 0,
-            'cutting' => 0,
-            'jahit' => 0,
-            'finishing' => 0,
-            'packing' => 0,
-            'sisa_print' => $qty,
-            'sisa_press' => $qty,
-            'sisa_cutting' => $qty,
-            'sisa_jahit' => $qty,
-            'sisa_finishing' => $qty,
-            'sisa_packing' => $qty,
-            'affiliator_kode' => $affiliatorKode, // Simpan kode, bukan ID
-        ]);
+            // Loop melalui setiap order
+            for ($i = 0; $i < $totalOrders; $i++) {
+                try {
+                    $jenisOrderId = $validated['jenis_order_id'][$i] ?? null;
+                    $kategoriId = $validated['kategori_id'][$i] ?? null;
+                    $namaJenis = $validated['nama_jenis'][$i] ?? '';
+                    
+                    \Log::info("Processing order {$i}: jenis_order_id={$jenisOrderId}, nama_jenis={$namaJenis}");
 
-        // Hubungkan affiliate jika ada
-        if ($affiliateId) {
-            $order->affiliates()->attach($affiliateId);
-        }
+                    if (!$jenisOrderId) {
+                        \Log::warning("Skipping order {$i} - jenis_order_id is null");
+                        continue;
+                    }
 
-        // Buat size
-        Size::create([
-            'order_id' => $order->id,
-            'xs' => $request->xs ?? 0,
-            's' => $request->s ?? 0,
-            'm' => $request->m ?? 0,
-            'l' => $request->l ?? 0,
-            'xl' => $request->xl ?? 0,
-            '2xl' => $request->input('2xl') ?? 0,
-            '3xl' => $request->input('3xl') ?? 0,
-            '4xl' => $request->input('4xl') ?? 0,
-            '5xl' => $request->input('5xl') ?? 0,
-            '6xl' => $request->input('6xl') ?? 0,
-        ]);
+                    // Ambil qty untuk order ini
+                    $qty = $validated['qty'][$jenisOrderId] ?? 0;
+                    
+                    \Log::info("Order {$i} - jenis_order_id: {$jenisOrderId}, qty: {$qty}");
 
-        // Persist spesifikasi
-        $speks = $request->input('speks', []);
-        if (is_array($speks) && count($speks) > 0) {
-            foreach ($speks as $jenis_spek_id => $jenis_spek_detail_id) {
-                if (!$jenis_spek_detail_id) continue;
-                OrderSpesifikasi::create([
-                    'order_id' => $order->id,
-                    'jenis_spek_id' => $jenis_spek_id,
-                    'jenis_spek_detail_id' => $jenis_spek_detail_id,
-                ]);
+                    if ($qty < 1) {
+                        \Log::warning("Skipping order {$i} with jenis_order_id {$jenisOrderId} - qty is 0");
+                        continue;
+                    }
+
+                    // Cari jenis order
+                    $jenisOrder = JenisOrder::find($jenisOrderId);
+                    if (!$jenisOrder) {
+                        throw new \Exception("Jenis order dengan ID {$jenisOrderId} tidak ditemukan");
+                    }
+
+                    $hargaSatuan = $validated['harga_jual_satuan'][$i] ?? 0;
+                    $hargaJualTotal = $validated['harga_jual_total'][$i] ?? 0;
+
+                    $kemampuanPrint = KemampuanProduksi::where('nama_kemampuan', 'Print')->first();
+                    $printPerHari = $kemampuanPrint ? $kemampuanPrint->nilai_kemampuan : 30; 
+
+                    $kemampuanPacking = KemampuanProduksi::where('nama_kemampuan', 'Packing & Finishing')->first();
+                    $packingPerHari = $kemampuanPacking ? $kemampuanPacking->nilai_kemampuan : 25;
+
+                    // Hitung hari produksi print
+                    $hariPrint = $qty > 0 ? round($qty / $printPerHari, 1) : 0;
+
+                    // Packing & finishing adalah nilai tetap (tidak dibagi)
+                    $hariPacking = $packingPerHari;
+
+                    // Total hari = print + packing & finishing (nilai tetap)
+                    $hari = $hariPrint + $hariPacking;
+                    $deadline = $hari;
+
+                    // Hitung laba bersih affiliate
+                    $labaBersihPerUnit = $jenisOrder->komisi_affiliate ?? 0;
+                    $labaBersihAffiliate = $labaBersihPerUnit * $qty;
+
+                    // Generate keterangan dari speks
+                    $keterangan = '';
+                    $speksData = [];
+                    
+                    try {
+                        $speksJson = $validated['speks'][$i] ?? '{}';
+                        $speksData = json_decode($speksJson, true);
+                        
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            \Log::warning("Invalid JSON for speks at index {$i}: " . json_last_error_msg());
+                            $speksData = [];
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning("Error parsing speks JSON: " . $e->getMessage());
+                        $speksData = [];
+                    }
+                    
+                    if (is_array($speksData) && count($speksData) > 0) {
+                        $keteranganParts = [];
+                        
+                        foreach ($speksData as $spekId => $detailIds) {
+                            $spek = JenisSpek::find($spekId);
+                            $spekName = $spek ? $spek->nama_jenis_spek : "Spek {$spekId}";
+                            
+                            $detailNames = [];
+                            if (is_array($detailIds)) {
+                                foreach ($detailIds as $detailId) {
+                                    $detail = JenisSpekDetail::find($detailId);
+                                    if ($detail) {
+                                        $detailNames[] = $detail->nama_jenis_spek_detail;
+                                    }
+                                }
+                            }
+                            
+                            if (count($detailNames) > 0) {
+                                $keteranganParts[] = "{$spekName}: " . implode(', ', $detailNames);
+                            }
+                        }
+                        
+                        $keterangan = implode(' | ', $keteranganParts);
+                    }
+
+                    // Buat order dengan group_order_id
+                    $order = Order::create([
+                        'group_order_id' => $groupOrder->id, // Link ke group order
+                        'nama_job' => $validated['nama_job'],
+                        'nama_konsumen' => $pelanggan->nama,
+                        'keterangan' => $keterangan,
+                        'qty' => $qty,
+                        'hari' => $hari,
+                        'est' => $hari,
+                        'deadline' => $deadline,
+                        'jenis_order_id' => $jenisOrderId,
+                        'harga_jual_satuan' => $hargaSatuan,
+                        'harga_jual_total' => $hargaJualTotal,
+                        'laba_bersih_affiliate' => $labaBersihAffiliate,
+                        'setting' => false,
+                        'status' => false,
+                        'print' => 0,
+                        'press' => 0,
+                        'cutting' => 0,
+                        'jahit' => 0,
+                        'finishing' => 0,
+                        'packing' => 0,
+                        'sisa_print' => $qty,
+                        'sisa_press' => $qty,
+                        'sisa_cutting' => $qty,
+                        'sisa_jahit' => $qty,
+                        'sisa_finishing' => $qty,
+                        'sisa_packing' => $qty,
+                        'affiliator_kode' => $affiliatorKode,
+                    ]);
+
+                    $createdOrders[] = $order;
+                    $savedOrderIds[] = $order->id;
+
+                    // Hubungkan affiliate jika ada
+                    if ($affiliateId) {
+                        $order->affiliates()->attach($affiliateId);
+                        \Log::info("Attached affiliate {$affiliateId} to order {$order->id}");
+                    }
+
+                    // Buat size breakdown
+                    $sizesData = $validated['sizes'][$jenisOrderId] ?? [];
+                    
+                    \Log::info("Creating size for order {$order->id}", $sizesData);
+                    
+                    Size::create([
+                        'order_id' => $order->id,
+                        'xs' => $sizesData['xs'] ?? 0,
+                        's' => $sizesData['s'] ?? 0,
+                        'm' => $sizesData['m'] ?? 0,
+                        'l' => $sizesData['l'] ?? 0,
+                        'xl' => $sizesData['xl'] ?? 0,
+                        '2xl' => $sizesData['2xl'] ?? 0,
+                        '3xl' => $sizesData['3xl'] ?? 0,
+                        '4xl' => $sizesData['4xl'] ?? 0,
+                        '5xl' => $sizesData['5xl'] ?? 0,
+                        '6xl' => $sizesData['6xl'] ?? 0,
+                    ]);
+
+                    // Simpan spesifikasi
+                    if (is_array($speksData) && count($speksData) > 0) {
+                        foreach ($speksData as $jenis_spek_id => $jenis_spek_detail_ids) {
+                            if (!is_array($jenis_spek_detail_ids)) {
+                                $jenis_spek_detail_ids = [$jenis_spek_detail_ids];
+                            }
+                            
+                            foreach ($jenis_spek_detail_ids as $jenis_spek_detail_id) {
+                                if (!$jenis_spek_detail_id) continue;
+                                
+                                OrderSpesifikasi::create([
+                                    'order_id' => $order->id,
+                                    'jenis_spek_id' => $jenis_spek_id,
+                                    'jenis_spek_detail_id' => $jenis_spek_detail_id,
+                                ]);
+                            }
+                        }
+                        \Log::info("Created spesifikasi for order {$order->id}");
+                    }
+
+                    // Hubungkan pelanggan dengan order
+                    DB::table('pelanggan_orders')->insert([
+                        'pelanggan_id' => $pelanggan->id,
+                        'order_id' => $order->id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    \Log::info("Order {$i} created successfully", [
+                        'order_id' => $order->id,
+                        'group_order_id' => $groupOrder->id,
+                        'jenis_order_id' => $jenisOrderId,
+                        'nama_jenis' => $namaJenis,
+                        'qty' => $qty,
+                        'harga_total' => $hargaJualTotal,
+                    ]);
+
+                } catch (\Exception $e) {
+                    \Log::error("Error creating order at index {$i}: " . $e->getMessage(), [
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    throw $e;
+                }
             }
+
+            // Di bagian penyimpanan pembayaran, ganti dengan:
+            if (isset($validated['dp_amount']) && $validated['dp_amount'] > 0) {
+                $dpAmount = $validated['dp_amount'];
+                $sisaBayar = $validated['sisa_bayar'] ?? 0;
+                $harusDibayar = $validated['harus_dibayar'] ?? $validated['grand_total'];
+                $paymentStatus = $validated['payment_status'] ?? ($sisaBayar <= 0);
+                
+                // Simpan pembayaran untuk setiap order
+                foreach ($createdOrders as $order) {
+                    // Hitung proporsi untuk setiap order
+                    $orderTotal = $order->harga_jual_total;
+                    $proportion = $orderTotal / $validated['grand_total'];
+                    
+                    $orderDP = round($dpAmount * $proportion);
+                    $orderSisa = round($sisaBayar * $proportion);
+                    $orderHarus = round($harusDibayar * $proportion);
+                    
+                    \App\Models\Pembayaran::create([
+                        'pelanggan_id' => $pelanggan->id,
+                        'order_id' => $order->id, // Wajib diisi
+                        'group_order_id' => $groupOrder->id, // Optional
+                        'dp' => $orderDP,
+                        'sisa_bayar' => $orderSisa,
+                        'harus_dibayar' => $orderHarus,
+                        'status' => $paymentStatus,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+                
+                \Log::info("Payment records created for {$groupOrder->id}");
+            }
+
+            // Jika tidak ada order yang dibuat
+            if (count($createdOrders) === 0) {
+                throw new \Exception('Tidak ada order yang berhasil dibuat. Pastikan minimal ada satu order dengan qty > 0.');
+            }
+
+            // Commit transaction jika semua sukses
+            DB::commit();
+
+            // Update totals
+            $this->updateTotals();
+
+            \Log::info("=== ORDER STORE PROCESS COMPLETED SUCCESSFULLY ===");
+            \Log::info("Total orders created: " . count($createdOrders));
+            \Log::info("Pelanggan ID: {$pelangganId}");
+            \Log::info("Affiliate ID: " . ($affiliateId ?? 'null'));
+            \Log::info("Payment data saved: DP = {$dpAmount}, Sisa = {$sisaBayar}, Status = " . ($paymentStatus ? 'Lunas' : 'Belum Lunas'));
+
+            return response()->json([
+                'success' => true,
+                'message' => count($createdOrders) . ' order berhasil ditambahkan dalam group order!',
+                'pelanggan_id' => $pelangganId,
+                'group_order_id' => $groupOrder->id,
+                'kode_group' => $groupOrder->kode_group,
+                'order_ids' => $savedOrderIds
+            ]);
+
+        } catch (\Exception $e) {
+            // Rollback transaction jika ada error
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            
+            \Log::error('Error creating orders: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan order: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Hubungkan pelanggan dengan order
-        DB::table('pelanggan_orders')->insert([
-            'pelanggan_id' => $pelanggan->id,
-            'order_id' => $order->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $this->updateTotals();
-
-        return redirect()->back()->with('success', 'Order berhasil ditambahkan!');
     }
 
-    public function destroy($id)
+    public function destroy($id) 
     {
-        $order = Order::findOrFail($id);
-        $order->delete();
+        try {
+            $order = Order::findOrFail($id);
+            $order->delete(); 
 
-        $totals = $this->updateTotals();
+            // Deteksi AJAX request
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order berhasil dihapus'
+                ]); 
+            }
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Order berhasil dihapus!',
-            'totals' => $totals
-        ], 200); // <-- WAJIB 200
+            return redirect()->route('orders.index')
+                ->with('success', 'Order berhasil dihapus');
+            
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus orders: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Gagal menghapus orders: ' . $e->getMessage());
+        }
     }
 
     public function updateStatus(Request $request, $id)
@@ -337,5 +620,190 @@ class OrderController extends Controller
         return view('dashboard.orders-detail', compact('order', 'orders', 'totals'));
     }
 
+    // di OrderController.php
+    public function indexGroupOrders(Request $request)
+    {
+        // Query dasar
+        $query = GroupOrder::with(['pelanggan', 'affiliate'])
+            ->orderBy('created_at', 'desc');
+        
+        // Filter berdasarkan tanggal
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $start = Carbon::parse($request->start_date)->startOfDay();
+            $end = Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('created_at', [$start, $end]);
+        }
+        
+        // Filter berdasarkan status pembayaran
+        if ($request->has('payment_status')) {
+            $status = $request->payment_status === 'lunas' ? true : false;
+            $query->where('payment_status', $status);
+        }
+        
+        // Filter berdasarkan kode group atau nama pelanggan
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('kode_group', 'like', "%{$search}%")
+                ->orWhereHas('pelanggan', function($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%");
+                });
+            });
+        }
+        
+        // Pagination
+        $groupOrders = $query->paginate(20);
+        
+        // Stats untuk dashboard
+        $stats = [
+            'total_groups' => GroupOrder::count(),
+            'total_pending' => GroupOrder::where('payment_status', false)->count(),
+            'total_paid' => GroupOrder::where('payment_status', true)->count(),
+            'total_revenue' => GroupOrder::sum('grand_total'),
+            'today_groups' => GroupOrder::whereDate('created_at', today())->count(),
+        ];
+        
+        return view('dashboard.group-order', compact('groupOrders', 'stats', 'request'));
+    }
+
+    public function showGroupOrder($id)
+    {
+        $groupOrder = GroupOrder::with([
+            'pelanggan',
+            'affiliate',
+            'orders.size',
+            'orders.jenisOrder',
+            'orders.spesifikasi.jenisSpek',
+            'orders.spesifikasi.jenisSpekDetail',
+            'pembayaran'
+        ])->findOrFail($id);
+        
+        // Hitung total dari semua order dalam group
+        $totalHargaGroup = $groupOrder->orders->sum('harga_jual_total');
+        
+        // Ambil semua nama_job yang unik dalam group
+        $semuaNamaJob = $groupOrder->orders
+            ->pluck('nama_job')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+        
+        return view('dashboard.group-order-show', compact(
+            'groupOrder',
+            'totalHargaGroup',
+            'semuaNamaJob'
+        ));
+    }
+
+    // di OrderController.php
+    public function exportGroupOrders(Request $request)
+    {
+        // Query sama dengan index
+        $query = GroupOrder::with(['pelanggan', 'affiliate'])
+            ->orderBy('created_at', 'desc');
+        
+        // Filter (sama seperti index)
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $start = Carbon::parse($request->start_date)->startOfDay();
+            $end = Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('created_at', [$start, $end]);
+        }
+        
+        if ($request->has('payment_status')) {
+            $status = $request->payment_status === 'lunas' ? true : false;
+            $query->where('payment_status', $status);
+        }
+        
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('kode_group', 'like', "%{$search}%")
+                ->orWhereHas('pelanggan', function($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%");
+                });
+            });
+        }
+        
+        $groupOrders = $query->get();
+        
+        // Generate CSV/Excel
+        $filename = 'group-orders-' . date('Y-m-d-H-i-s') . '.csv';
+        
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        
+        $output = fopen('php://output', 'w');
+        
+        // Header CSV
+        fputcsv($output, [
+            'Kode Group',
+            'Pelanggan',
+            'Sales',
+            'Total Harga',
+            'DP',
+            'Sisa Bayar',
+            'Status',
+            'Tanggal',
+            'Jumlah Order'
+        ]);
+        
+        // Data
+        foreach ($groupOrders as $group) {
+            fputcsv($output, [
+                $group->kode_group,
+                $group->pelanggan->nama ?? '-',
+                $group->affiliate->nama ?? '-',
+                $group->grand_total,
+                $group->dp_amount,
+                $group->sisa_bayar,
+                $group->payment_status ? 'LUNAS' : 'BELUM LUNAS',
+                $group->created_at->format('d/m/Y H:i'),
+                $group->orders_count ?? 0
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+
+    public function markAsPaid($id)
+    {
+        try {
+            $groupOrder = GroupOrder::findOrFail($id);
+            
+            DB::beginTransaction();
+            
+            // Update group order
+            $groupOrder->update([
+                'payment_status' => true,
+                'sisa_bayar' => 0,
+                'dp_amount' => $groupOrder->harus_dibayar
+            ]);
+            
+            // Update pembayaran jika ada
+            if ($groupOrder->pembayaran) {
+                $groupOrder->pembayaran->update([
+                    'status' => true,
+                    'sisa_bayar' => 0,
+                    'dp' => $groupOrder->harus_dibayar
+                ]);
+            }
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Group order berhasil ditandai sebagai LUNAS'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 }

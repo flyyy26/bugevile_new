@@ -40,9 +40,6 @@ class PegawaiController extends Controller
             'Packing'   => $hargaDb->harga_packing,
         ];
 
-        // 1. Ambil semua pegawai dan eager load riwayat pekerjaan (order_histories) dan casbon
-        // Sertakan juga relasi order di dalam histories supaya frontend bisa mengakses
-        // nilai seperti total_lembar_print / total_lembar_press saat filtering per bulan.
         $pegawais = Pegawai::with(['casbons', 'histories.order'])->get();
 
         $urutanPosisi = ['Setting', 'Print', 'Press', 'Cutting', 'Jahit', 'Finishing', 'Packing'];
@@ -212,19 +209,33 @@ class PegawaiController extends Controller
         return redirect()->route('pegawai.index')->with('success', 'Pegawai berhasil diperbarui.');
     }
 
-    public function destroy(Pegawai $pegawai)
+    public function destroy($id)
     {
-        $pegawaiName = $pegawai->nama;
-        $pegawai->delete();
+        try {
+            $pegawai = Pegawai::findOrFail($id);
+            $pegawaiName = $pegawai->nama;
+            $pegawai->delete();
 
-        if (request()->ajax() || request()->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Pegawai "' . $pegawaiName . '" berhasil dihapus'
-            ]);
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pegawai "' . $pegawaiName . '" berhasil dihapus'
+                ]);
+            }
+
+            return redirect()->route('pegawai.index')
+                ->with('success', 'Pegawai "' . $pegawaiName . '" berhasil dihapus');
+
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus pegawai: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Gagal menghapus pegawai: ' . $e->getMessage());
         }
-
-        return back()->with('success', 'Pegawai "' . $pegawaiName . '" berhasil dihapus.');
     }
 
     public function show($id)
@@ -285,26 +296,56 @@ class PegawaiController extends Controller
     public function storeCasbon(Request $request)
     {
         $request->validate([
-            'pegawai_id' => 'required',
+            'pegawai_id' => 'required|exists:pegawais,id',
             'jumlah' => 'required|numeric',
             'keterangan' => 'nullable|string',
             'tanggal' => 'required|date'
         ]);
 
+        // Simpan casbon baru
         $casbon = Casbon::create($request->all());
-        
-        // Ambil data rekap terbaru untuk hitung sisa
-        // Sesuaikan dengan logika perhitungan Anda
-        $pegawai = Pegawai::find($request->pegawai_id);
 
-        // Return JSON response untuk AJAX
+        // Ambil data pegawai
+        $pegawai = Pegawai::with('histories.order', 'casbons')->findOrFail($request->pegawai_id);
+
+        // Hitung total keseluruhan pegawai
+        $harga = [
+            'Setting' => $pegawai->harga_setting ?? 0,
+            'Print' => $pegawai->harga_print ?? 0,
+            'Press' => $pegawai->harga_press ?? 0,
+            'Cutting' => $pegawai->harga_cutting ?? 0,
+            'Jahit' => $pegawai->harga_jahit ?? 0,
+            'Finishing' => $pegawai->harga_finishing ?? 0,
+            'Packing' => $pegawai->harga_packing ?? 0,
+        ];
+
+        $totalKeseluruhan = 0;
+        foreach ($pegawai->histories as $h) {
+            $jenis = $h->jenis_pekerjaan;
+            $qty = $h->qty ?? 0;
+            if (in_array($jenis, ['Print', 'Press'])) {
+                $lembar = $h->order->{$jenis == 'Print' ? 'total_lembar_print' : 'total_lembar_press'} ?? 0;
+                $totalKeseluruhan += $lembar * ($harga[$jenis] ?? 0);
+            } else {
+                $totalKeseluruhan += $qty * ($harga[$jenis] ?? 0);
+            }
+        }
+
+        // Hitung total casbon dan sisa
+        $totalCasbon = $pegawai->casbons->sum('jumlah') ?? 0;
+        $totalSisa = $totalKeseluruhan - $totalCasbon;
+
+        // Return JSON lengkap
         return response()->json([
             'success' => true,
             'message' => 'Casbon berhasil ditambahkan',
             'casbon' => $casbon,
-            'pegawai_id' => $request->pegawai_id
+            'pegawai_id' => $pegawai->id,
+            'total_casbon' => $totalCasbon,
+            'total_sisa' => $totalSisa,
         ]);
     }
+
 
     public function showCasbonForm()
     {

@@ -11,12 +11,14 @@ use App\Models\JenisOrder;
 use App\Models\Job;
 use App\Models\KategoriJenisOrder;
 use App\Models\JenisBahan;
+use App\Models\HargaAffiliator;
 use App\Models\JenisPola;
 use App\Models\JenisKerah;
 use App\Models\JenisJahitan;
 use App\Models\Pelanggan;
 use App\Models\JenisSpek;
 use App\Models\JenisSpekDetail;
+use App\Models\KemampuanProduksi;
 
 class DashboardController extends Controller
 {
@@ -33,6 +35,9 @@ class DashboardController extends Controller
             ->orderBy('sisa_packing', 'desc')
             ->latest()
             ->get();
+
+        $kemampuanPacking = KemampuanProduksi::where('nama_kemampuan', 'Packing & Finishing')->first();
+        $packingPerHari = $kemampuanPacking ? $kemampuanPacking->nilai_kemampuan : 30; 
 
         // Ambil semua order untuk select dropdown, dengan relasi 'jenisOrder'
         $ordersSelect = Order::with('jenisOrder')
@@ -72,7 +77,7 @@ class DashboardController extends Controller
         return view('dashboard.index', compact(
             'totals', 'orders', 'pegawais', 'allHistories', 'ordersSelect', 'jenisBahan',
             'jenisOrders', 'jobs', 'kategoriList', 'uniqueKonsumens',
-            'pelanggans', 'jenisSpek', 'jenisSpekDetail', 'ordersForMap'
+            'pelanggans', 'jenisSpek', 'jenisSpekDetail', 'ordersForMap', 'packingPerHari'
         ));
     }
 
@@ -148,7 +153,7 @@ class DashboardController extends Controller
             ])
             ->firstOrFail();
 
-        $orders = Order::orderBy('created_at', 'desc')->get();
+        $orders = Order::with('jenisOrder')->orderBy('created_at', 'desc')->get();
         $pegawais = Pegawai::orderBy('nama', 'asc')->get();
         $allHistories = OrderHistory::with('pegawai')->orderBy('created_at', 'desc')->get();
 
@@ -402,5 +407,256 @@ class DashboardController extends Controller
         return back()->with('success', 'Progress berhasil disimpan!');
     }
 
+    // app/Http/Controllers/DashboardController.php
+    public function totalTransaksi(Request $request)
+    {
+        // Ambil semua jenis order dengan data terkait
+        $jenisOrders = JenisOrder::with([
+            'belanja.asesoris',
+            'hargaJenisPekerjaan',
+            'biaya',
+            'orders' => function($query) {
+                $query->select('id', 'jenis_order_id', 'qty', 'harga_jual_total', 'affiliator_kode', 'laba_bersih_affiliate');
+            },
+            'ordersCalo' => function($query) {
+                $query->select('id', 'jenis_order_id', 'qty', 'harga_jual_total', 'affiliator_kode', 'laba_bersih_affiliate')
+                    ->whereNotNull('affiliator_kode');
+            },
+            'ordersDirect' => function($query) {
+                $query->select('id', 'jenis_order_id', 'qty', 'harga_jual_total', 'affiliator_kode', 'laba_bersih_affiliate')
+                    ->whereNull('affiliator_kode');
+            }
+        ])->orderBy('nama_jenis')->get();
+        
+        // Ambil semua kategori biaya yang unik dari database
+        $allBiaya = \App\Models\Biaya::select('nama')
+            ->distinct()
+            ->orderBy('nama')
+            ->get()
+            ->pluck('nama')
+            ->toArray();
+        
+        // Jika ingin grup beberapa biaya yang sama (case-insensitive)
+        $groupedBiaya = [];
+        foreach ($allBiaya as $biayaName) {
+            $lowerName = strtolower($biayaName);
+            $found = false;
+            
+            foreach ($groupedBiaya as $key => $group) {
+                if (strtolower($key) === $lowerName || 
+                    similar_text(strtolower($key), $lowerName) > 80) {
+                    $found = true;
+                    break;
+                }
+            }
+            
+            if (!$found) {
+                $groupedBiaya[$biayaName] = $biayaName;
+            }
+        }
+        
+        $biayaCategories = array_keys($groupedBiaya);
 
+        $hargaAffiliator = \App\Models\HargaAffiliator::first();
+        $persentaseKomisi = $hargaAffiliator ? $hargaAffiliator->harga : 0;
+        
+        // Deklarasi variabel awal
+        $grandTotal = 0;
+        $grandTotalQty = 0;
+        $grandTotalQtyCalo = 0;
+        $grandTotalQtyDirect = 0;
+        $grandTotalRevenue = 0;
+        $grandTotalRevenueCalo = 0;
+        $grandTotalRevenueDirect = 0;
+        $grandTotalBiaya = 0;
+        $grandTotalBiayaLain = 0;
+        $grandTotalKomisiCalo = 0;
+        
+        // Array untuk menyimpan total per kategori biaya
+        $categoryTotals = array_fill_keys($biayaCategories, 0);
+        
+        // Array sementara untuk menyimpan data
+        $tempTotals = [];
+        
+        foreach ($jenisOrders as $jo) {
+            // Hitung total qty dari semua order jenis ini
+            $totalQty = $jo->orders->sum('qty');
+            $totalQtyCalo = $jo->ordersCalo->sum('qty');
+            $totalQtyDirect = $jo->ordersDirect->sum('qty');
+            
+            // Hitung total revenue (harga_jual_total)
+            $totalRevenue = $jo->orders->sum('harga_jual_total');
+            $totalRevenueCalo = $jo->ordersCalo->sum('harga_jual_total');
+            $totalRevenueDirect = $jo->ordersDirect->sum('harga_jual_total');
+            
+            // Hitung total komisi dari laba_bersih_affiliate
+            $totalKomisiCalo = $jo->ordersCalo->sum('laba_bersih_affiliate');
+            $totalKomisiDirect = $jo->ordersDirect->sum('laba_bersih_affiliate');
+
+            // Hitung total biaya produksi
+            $totalBiayaProduksi = 0;
+            
+            // 1. Biaya dari tb_belanja
+            $nilai = 1;
+            $bahanHarga = 0;
+            $kertasHarga = 0;
+            
+            if ($jo->belanja) {
+                $nilai = $jo->nilai ?? 1;
+                $bahanHarga = ($jo->belanja->bahan_harga ?? 0) * $nilai;
+                $kertasHarga = ($jo->belanja->kertas_harga ?? 0) * $nilai;
+                $totalBiayaProduksi += $bahanHarga;
+                $totalBiayaProduksi += $kertasHarga;
+                $totalBiayaProduksi += $jo->belanja->asesoris->sum('harga') ?? 0;
+            }
+            
+            // 2. Biaya dari harga jenis pekerjaan
+            $totalHargaPekerjaan = 0;
+            if ($jo->hargaJenisPekerjaan) {
+                $fields = [
+                    'harga_setting' => fn($h) => $h,
+                    'harga_print' => fn($h) => $h * ($jo->nilai ?? 1),
+                    'harga_press' => fn($h) => $h * ($jo->nilai ?? 1),
+                    'harga_cutting' => fn($h) => $h,
+                    'harga_jahit' => fn($h) => $h,
+                    'harga_finishing' => fn($h) => $h,
+                    'harga_packing' => fn($h) => $h
+                ];
+                
+                foreach ($fields as $key => $field) {
+                    $harga = $jo->hargaJenisPekerjaan->$key ?? 0;
+                    $totalHargaPekerjaan += $field($harga);
+                }
+            }
+            
+            $totalBiayaProduksi += $totalHargaPekerjaan;
+            
+            // 3. Hitung biaya lain per kategori
+            $biayaPerKategori = [];
+            $totalBiayaLain = 0;
+            $detailBiayaLain = []; 
+            
+            foreach ($jo->biaya as $biaya) {
+                $biayaName = $biaya->nama;
+                $biayaHarga = $biaya->harga;
+
+                $detailBiayaLain[] = [
+                    'nama' => $biayaName,
+                    'harga' => $biayaHarga
+                ];
+                
+                // Cari kategori yang sesuai (case-insensitive)
+                $foundCategory = null;
+                foreach ($biayaCategories as $category) {
+                    if (strtolower($category) === strtolower($biayaName) || 
+                        str_contains(strtolower($category), strtolower($biayaName)) ||
+                        str_contains(strtolower($biayaName), strtolower($category))) {
+                        $foundCategory = $category;
+                        break;
+                    }
+                }
+                
+                // Jika tidak ditemukan, gunakan nama asli
+                if (!$foundCategory) {
+                    $foundCategory = $biayaName;
+                    // Tambahkan ke kategori jika belum ada
+                    if (!in_array($biayaName, $biayaCategories)) {
+                        $biayaCategories[] = $biayaName;
+                        $categoryTotals[$biayaName] = 0;
+                    }
+                }
+                
+                // Simpan biaya per kategori
+                if (!isset($biayaPerKategori[$foundCategory])) {
+                    $biayaPerKategori[$foundCategory] = 0;
+                }
+                $biayaPerKategori[$foundCategory] += $biayaHarga;
+                
+                $totalBiayaLain += $biayaHarga;
+                
+                // Tambahkan ke total per kategori global
+                if (isset($categoryTotals[$foundCategory])) {
+                    $categoryTotals[$foundCategory] += ($biayaHarga * $totalQty);
+                } else {
+                    $categoryTotals[$foundCategory] = ($biayaHarga * $totalQty);
+                }
+            }
+            
+            // PERHITUNGAN TOTAL BIAYA (TERMASUK KOMISI CALO)
+            $totalSemuaBiayaPerUnit = $totalBiayaProduksi + $totalBiayaLain;
+            
+            // Total biaya keseluruhan = (biaya per unit × total qty) + total komisi calo
+            $totalBiayaKeseluruhan = ($totalSemuaBiayaPerUnit * $totalQty) + $totalKomisiCalo;
+            
+            // Hitung profit/laba setelah dikurangi semua biaya (termasuk komisi)
+            $profit = $totalRevenue - $totalBiayaKeseluruhan;
+            $profitMargin = $totalRevenue > 0 ? ($profit / $totalRevenue) * 100 : 0;
+            
+            $tempTotals[] = [
+                'jenis_order' => $jo,
+                'total_qty' => $totalQty,
+                'total_qty_calo' => $totalQtyCalo,
+                'total_qty_direct' => $totalQtyDirect,
+                'total_revenue' => $totalRevenue,
+                'total_revenue_calo' => $totalRevenueCalo,
+                'total_revenue_direct' => $totalRevenueDirect,
+                'total_komisi_calo' => $totalKomisiCalo,
+                'total_komisi_direct' => $totalKomisiDirect,
+                'biaya_per_unit' => $totalSemuaBiayaPerUnit,
+                'total_biaya_produksi' => $totalSemuaBiayaPerUnit * $totalQty,
+                'total_biaya' => $totalBiayaKeseluruhan, // INI SUDAH TERMASUK KOMISI CALO
+                'profit' => $profit,
+                'profit_margin' => $profitMargin,
+                'harga_pekerjaan' => $totalHargaPekerjaan,
+                'jumlah_order' => $jo->orders->count(),
+                'jumlah_order_calo' => $jo->ordersCalo->count(),
+                'jumlah_order_direct' => $jo->ordersDirect->count(),
+                'nilai_pengali' => $nilai ?? 1,
+                'bahan_harga_asli' => $jo->belanja->bahan_harga ?? 0,
+                'bahan_harga_terkali' => $bahanHarga ?? 0,
+                'kertas_harga_asli' => $jo->belanja->kertas_harga ?? 0,
+                'kertas_harga_terkali' => $kertasHarga ?? 0,
+                'biaya_lain_per_unit' => $totalBiayaLain,
+                'total_biaya_lain' => $totalBiayaLain * $totalQty,
+                'detail_biaya_lain' => $detailBiayaLain,
+                'biaya_per_kategori' => $biayaPerKategori,
+                'komisi_affiliate_per_unit' => $jo->komisi_affiliate ?? 0,
+            ];
+            
+            // Hitung grand total
+            $grandTotalQty += $totalQty;
+            $grandTotalRevenue += $totalRevenue;
+            $grandTotalQtyCalo += $totalQtyCalo; 
+            $grandTotalRevenueCalo += $totalRevenueCalo;
+            $grandTotalQtyDirect += $totalQtyDirect;
+            $grandTotalRevenueDirect += $totalRevenueDirect;
+            $grandTotalKomisiCalo += $totalKomisiCalo;
+            $grandTotalBiaya += $totalBiayaKeseluruhan; // Total biaya termasuk komisi
+            $grandTotalBiayaLain += ($totalBiayaLain * $totalQty);
+            $grandTotal += $profit;
+        }
+        
+        // Konversi array ke Collection
+        $totals = collect($tempTotals);
+        
+        // Urutkan kategori biaya alfabet
+        sort($biayaCategories);
+        
+        return view('dashboard.total-transaksi', compact(
+            'totals',
+            'grandTotal', 
+            'grandTotalQty', 
+            'grandTotalQtyCalo',
+            'grandTotalQtyDirect',
+            'grandTotalRevenue', 
+            'grandTotalRevenueCalo',
+            'grandTotalRevenueDirect',
+            'grandTotalBiaya', // Total semua biaya termasuk komisi
+            'grandTotalKomisiCalo',
+            'grandTotalBiayaLain',
+            'biayaCategories',
+            'categoryTotals',
+            'persentaseKomisi'
+        ));
+    }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "84603e2e5482ddaae60a5b93055f01db",
+    "content-hash": "4f5d030b57a868ff349d739e56d6c5b9",
     "packages": [
         {
             "name": "brick/math",
@@ -5933,6 +5933,38 @@
         }
     ],
     "packages-dev": [
+        {
+            "name": "dg/adminer",
+            "version": "v3.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dg/adminer.git",
+                "reference": "04e4219c4c74b56d1bc1d803041d3191669d1735"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dg/adminer/zipball/04e4219c4c74b56d1bc1d803041d3191669d1735",
+                "reference": "04e4219c4c74b56d1bc1d803041d3191669d1735",
+                "shasum": ""
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "description": "Customization for Adminer, the best database management tool written in PHP.",
+            "keywords": [
+                "database",
+                "elasticsearch",
+                "mongodb",
+                "mssql",
+                "mysql",
+                "oracle",
+                "postgresql",
+                "sqlite"
+            ],
+            "support": {
+                "source": "https://github.com/dg/adminer/tree/v3.3.1"
+            },
+            "time": "2025-12-11T07:10:50+00:00"
+        },
         {
             "name": "fakerphp/faker",
             "version": "v1.24.1",

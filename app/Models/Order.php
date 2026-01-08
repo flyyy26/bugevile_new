@@ -9,10 +9,10 @@ use Illuminate\Support\Str;
 class Order extends Model
 {
     protected $fillable = [
-        'nama_job','qty','jenis_order_id','hari','deadline','nama_konsumen','keterangan',
+        'nama_job','qty', 'group_order_id', 'jenis_order_id','hari','deadline','nama_konsumen','keterangan',
         'setting','print','press','cutting','jahit','finishing','packing','est',
         'sisa_print','sisa_press','sisa_cutting','sisa_jahit','sisa_finishing','sisa_packing',
-        'affiliator_kode', 'status',
+        'affiliator_kode', 'status', 'harga_jual_total', 'harga_jual_satuan', 'laba_bersih_affiliate',
 
         // removed unused spesifikasi fields
     ];
@@ -41,6 +41,11 @@ class Order extends Model
             // 3. Simpan slug yang unik ke model
             $order->slug = $slug;
         });
+    }
+
+    public function groupOrder()
+    {
+        return $this->belongsTo(GroupOrder::class);
     }
 
     public function latestSettingHistory()
@@ -130,5 +135,25 @@ class Order extends Model
         return $this->hasOne(OrderTotal::class, 'order_id');
     }
 
+    public function getHargaJualTotalRupiahAttribute()
+    {
+        return 'Rp ' . number_format($this->harga_jual_total, 0, ',', '.');
+    }
+    
+    public function getHargaJualSatuanRupiahAttribute()
+    {
+        return 'Rp ' . number_format($this->harga_jual_satuan, 0, ',', '.');
+    }
+    // Relasi ke pembayaran
+    public function pembayaran()
+    {
+        return $this->hasOne(Pembayaran::class);
+    }
+
+    // Cek apakah order sudah lunas
+    public function isLunas()
+    {
+        return $this->pembayaran && $this->pembayaran->status;
+    }
 
 }

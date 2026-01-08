@@ -35,21 +35,44 @@
                     <a href="/dashboard/orders" class="{{ Request::is('dashboard/orders') ? 'active' : '' }}">
                         Pesanan
                     </a>
-                    <a href="/dashboard/pegawai" class="{{ Request::is('dashboard/pegawai') ? 'active' : '' }}">
-                        Pegawai
-                    </a>
-                    <a href="/dashboard/affiliator" class="{{ Request::is('dashboard/affiliator') ? 'active' : '' }}">
-                        Affiliator
-                    </a>
-                    <a href="/dashboard/pelanggan" class="{{ Request::is('dashboard/pelanggan') ? 'active' : '' }}">
-                        Pelanggan
-                    </a>
-                    <a href="/dashboard/spesifikasi" class="{{ Request::is('dashboard/spesifikasi') ? 'active' : '' }}">
-                        Spesifikasi
-                    </a>
-                    <a href="/dashboard/pengaturan" class="{{ Request::is('dashboard/pengaturan') ? 'active' : '' }}">
-                        Pengaturan
-                    </a>
+                    @if(Auth::user()->role === 'admin')
+                        <a href="/dashboard/total-transaksi" class="{{ Request::is('dashboard/total-transaksi') ? 'active' : '' }}">
+                            Belanja
+                        </a>
+                    @endif
+                    
+                    @if(Auth::user()->role === 'admin')
+                        <li style="list-style:none;" class="menu-item {{ Request::is('dashboard/pengaturan*','dashboard/pegawai*','dashboard/affiliator*','dashboard/pelanggan*') ? 'open' : '' }}">
+                            <a href="javascript:void(0)" class="menu-link toggle-submenu">
+                                <span>Pengaturan</span>
+                                <span class="arrow">▾</span>
+                            </a>
+
+                            <ul class="submenu">
+                                <li>
+                                    <a href="/dashboard/pengaturan"
+                                    class="{{ Request::is('dashboard/pengaturan') ? 'active' : '' }}">
+                                        Pengaturan Umum
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="/dashboard/pegawai"
+                                    class="{{ Request::is('dashboard/pegawai') ? 'active' : '' }}">
+                                        Pegawai
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="/dashboard/pelanggan"
+                                    class="{{ Request::is('dashboard/pelanggan') ? 'active' : '' }}">
+                                        Pelanggan
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    @endif
                 </div>
                 <div class="logout_layout">
                     <form action="/dashboard/logout" method="POST">
@@ -65,12 +88,15 @@
         <!-- Main Content (default penuh layar) -->
         <main id="mainContent">
             
-            <div class="sidebar_btn_wrapper">
-                <!-- Toggle Button -->
-                <button onclick="toggleSidebar()" id="hamburger" class="sidebar_hamburger">
-                    ☰ Menu
-                </button>
-                
+            <div class="sidebar_btn_wrapper hidden_print">
+
+                <div class="sidebar_btn_layout">
+                    <!-- Toggle Button -->
+                    <button onclick="toggleSidebar()" id="hamburger" class="sidebar_hamburger">
+                        ☰ Menu
+                    </button>
+                    <button class="sidebar_hamburger" onclick="goBack()">Kembali</button>
+                </div>
             </div>
 
             @yield('content')
@@ -78,22 +104,54 @@
 
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggles = document.querySelectorAll('.toggle-submenu');
+
+            toggles.forEach(toggle => {
+                toggle.addEventListener('click', function () {
+                    const parent = this.closest('.menu-item');
+                    parent.classList.toggle('open');
+                });
+            });
+        });
+    </script>
+
 
     <script>
-        function toggleSidebar() {
+         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const hamburger = document.getElementById('hamburger');
 
-            
             sidebar.classList.toggle('active');
+            hamburger.classList.toggle('geser-kanan');
+        }
 
-            if (sidebar.classList.contains('active')) {
-                hamburger.classList.add('geser-kanan'); 
-            } else {
-                hamburger.classList.remove('geser-kanan');
-            }
+        function resetSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburger = document.getElementById('hamburger');
+
+            sidebar.classList.remove('active');
+            hamburger.classList.remove('geser-kanan');
+        }
+
+        window.addEventListener('pageshow', function () {
+            resetSidebar();
+        });
+
+        function goBack() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburger = document.getElementById('hamburger');
+
+            // pastikan sidebar ditutup
+            sidebar.classList.remove('active');
+            hamburger.classList.remove('geser-kanan');
+
+            // kembali ke halaman sebelumnya
+            history.back();
         }
     </script>
+
 
 </body>
 </html>

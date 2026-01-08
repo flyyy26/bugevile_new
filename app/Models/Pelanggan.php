@@ -28,5 +28,22 @@ class Pelanggan extends Model
     {
         return $this->belongsTo(Affiliate::class, 'id_affiliates', 'id');
     }
+    // Relasi ke pembayaran
+    public function pembayarans()
+    {
+        return $this->hasMany(Pembayaran::class);
+    }
+
+    // Total DP pelanggan
+    public function totalDp()
+    {
+        return $this->pembayarans()->sum('dp');
+    }
+
+    // Total sisa bayar pelanggan
+    public function totalSisaBayar()
+    {
+        return $this->pembayarans()->sum('sisa_bayar');
+    }
 
 }

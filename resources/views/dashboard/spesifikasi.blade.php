@@ -119,7 +119,7 @@
                                                             Edit
                                                         </button>
                                                         <form 
-                                                            action="{{ url('/jenis-spek-detail/' . $d->id) }}" 
+                                                            action="{{ url('/dashboard/jenis-spek-detail/' . $d->id) }}" 
                                                             method="POST" 
                                                             style="display:inline;"
                                                             onsubmit="confirmDelete(event, this)"
@@ -472,7 +472,7 @@ document.getElementById('formTambahKategori').addEventListener('submit', functio
     const namaKategori = document.getElementById('namaKategoriInput').value;
     
     // Kirim request AJAX
-    fetch('/kategori-jenis-order/store', {
+    fetch('/dashboard/kategori-jenis-order/store', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
@@ -649,13 +649,17 @@ if (confirmDeleteKategoriBtn) {
         deleteKategoriModal.style.display = "none";
         
         // Kirim request DELETE
-        fetch(`/kategori-jenis-order/${kategoriId}`, {
-            method: 'DELETE',
+        fetch(`/dashboard/kategori-jenis-order/${kategoriId}`, {
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                _method: 'DELETE' // Method spoofing
+            })
         })
         .then(response => {
             console.log('Response status:', response.status);
@@ -758,12 +762,12 @@ function openDetailModal(kategoriId, spekId, detailId, detailNama, selectedJenis
         // Edit mode
         titleEl.textContent = 'Edit Jenis Spek Detail';
         methodInput.value = 'PUT';
-        form.action = `/jenis-spek-detail/${detailId}`;
+        form.action = `/dashboard/jenis-spek-detail/${detailId}`;
     } else {
         // Create mode
         titleEl.textContent = 'Tambah Jenis Spek Detail';
         methodInput.value = 'POST';
-        form.action = '/jenis-spek-detail';
+        form.action = '/dashboard/jenis-spek-detail';
     }
 
     modal.classList.add('active');
@@ -868,16 +872,18 @@ if (confirmDeleteSpekBtn) {
         deleteSpekModal.style.display = "none";
         
         // Kirim request DELETE
-        fetch(`/jenis-spek/${spekId}`, {
-            method: 'DELETE',
+        fetch(`/dashboard/jenis-spek/${spekId}`, {
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
                 current_kategori_id: kategoriId,
-                current_spek_id: spekId
+                current_spek_id: spekId,
+                _method: 'DELETE'
             })
         })
         .then(response => {

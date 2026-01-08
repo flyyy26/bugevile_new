@@ -215,6 +215,8 @@
     height: 100%;
     padding: 1.3vw;
     overflow: auto;
+    z-index: 10;
+    position: relative;
 }
 .dashboard_popup_order_wrapper::-webkit-scrollbar{
     display: none;
@@ -227,7 +229,7 @@
     max-width: 68.5%;
     border-radius: .6vw;
     padding: 1.2vw 1.7vw;
-    z-index: 5;
+    z-index: 10;
 }
 .dashboard_popup_order_small .dashboard_popup_order_box{
     max-width: 30%;
@@ -274,11 +276,36 @@
 .input_form_big{
     font-size: 1.2vw;
 }
+.btn_persentasi{
+    font-size: .85vw;
+    width: max-content;
+    border: none;
+    border-radius: .3vw;
+    padding: .6vw 1vw;
+    outline: none;
+    text-decoration: none;
+    background-color: #008080;
+    color: white;
+    text-align: center;
+    display: block;
+    cursor: pointer;
+}
 .form_field{
     margin-bottom: 1vw;
 }
 .form_field_normal{
     margin-bottom: 1vw;
+}
+.form_field_normal_komisi{
+    display: flex;
+    gap: .6vw;
+    width: 100%;
+    align-items: center;
+}
+.form_field_normal_komisi_sc{
+    display: flex;
+    width: 100%;
+    align-items: center;
 }
 .form_field_normal label{
     display: block;
@@ -400,10 +427,6 @@
 }
 .dashboard_popup_order_size_box input[type=number] {
   -moz-appearance: textfield;
-}
-.dashboard_popup_order_size .dashboard_popup_order_size_box:last-child input{
-    background-color: rgb(31 41 55);
-    color: white;
 }
 
 .keterangan_option{

@@ -202,26 +202,54 @@
     text-align: center;
 }
 .pelanggan_jenis_job_heading{
-    font-size: 1.2vw;
+    font-size: .9vw;
     margin-bottom: .4vw;
+    color: white;
 }
 .pelanggan_jenis_job_spek{
     margin-top: 1.8vw;
 }
 .pelanggan_jenis_job_spek_layout{
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-gap: 1.8vw;
+    grid-template-columns: repeat(3, 1fr);
+    flex-wrap: wrap;
+    width: 100%;
     margin-top: 1vw;
+    grid-gap: 1.2vw;
 }
 .pelanggan_jenis_job_spek_box{
-    padding: .6vw;
-    background-color: white;
-    border: .1vw solid #969799;
+    padding: 1vw;
+    background-color: #3b82f6;
+    border: .1vw solid #3b82f6;
     border-radius: .6vw;
     display: flex;
-    align-items: center;
+    align-items: start;
+    flex-direction: column;
     gap: .8vw;
+    width: 100%;
+}
+.pelanggan_jenis_job_spek_details{
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .7vw;
+}
+@media print {
+    .pelanggan_jenis_job_spek_layout{
+        grid-gap: 1.5vw;
+    }
+    .pelanggan_jenis_job_spek_details{
+        display: flex;
+        align-items: flex-start;
+        flex-direction: row;
+        gap: 1vw;
+    }
+}
+.pelanggan_jenis_job_spek_detail_item{
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: .7vw;
 }
 .pelanggan_jenis_job_spek_img{
     width: 4vw;
@@ -238,6 +266,15 @@
     height: 100%;
     object-position: center;
     object-fit: cover;
+}
+.pelanggan_jenis_job_spek_detail_item p{
+    font-size: .9vw;
+    color: white;
+}
+.form_grid_4{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap:.9vw;
 }
 @media print {
     .pelanggan_jenis_job_heading{
@@ -266,4 +303,126 @@
 
 .hidden{
     display: none;
+}
+
+.kode_layout_input{
+    display: flex;
+    gap: .8vw;
+}
+.red-note{
+    color: #B91C1C;
+    font-size: .9vw;
+    font-weight: 600;
+}
+.spek-tab-active {
+    border-bottom: 3px solid black !important;
+    opacity: 1 !important;
+}
+.kategori-tab-active {
+    border-bottom: 3px solid black !important;
+}
+.harga_barang_style{
+    display: flex;
+    align-items: center;
+    gap: .6vw;
+}
+.harga_barang_style span{
+    font-size: .9vw;
+}
+.harga_barang_style p{
+    font-size: .9vw;
+}
+.form_between_heading{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .5vw;
+}
+.form_between_heading button{
+    border: none;
+    outline: none;
+    background-color: transparent;
+    color: #047857;
+    font-size: .9vw;
+    cursor: pointer;
+}
+.field_two_style{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: .7vw;
+}
+.remove_row_style{
+    display: flex;
+    gap: .8vw;
+    align-items: center;
+    margin-bottom: .6vw;
+}
+.delete_row_style{
+    background-color: #B91C1C;
+    outline: none;
+    border: none;
+    width: 4vw;
+    height: 1.8vw;
+    border-radius: 100vw;
+    color: white;
+    cursor: pointer;
+    position: relative;
+}
+.delete_row_style p{
+    position: absolute !important;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: .8vw;
+    display: block;
+    text-transform: capitalize;
+}
+
+.affiliate_aksi{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: .3vw;
+}
+.affiliate_aksi button{
+    font-size: .76vw;
+    outline: none;
+    border: none;
+    padding: .2vw .5vw;
+    border-radius: .4vw;
+}
+.affiliate_aksi p{
+    font-size: .7vw;
+}
+.btn_more_style{
+    background-color: #0066b9;
+    color: white;
+    font-size: .6vw;
+    padding: .3vw .5vw;
+    border-radius: .6vw;
+}
+
+.popup_bottom_style{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+.popup_bottom_style_input{
+    width: max-content;
+    display: flex;
+    align-items: center;
+    gap: .4vw;
+    border: .12vw solid #047857;
+    border-radius: .6vw;
+    overflow: hidden;
+    padding: .6vw 1vw;
+}
+.popup_bottom_style_input p{
+    font-size: 1vw;
+    color: #047857;
+}
+.popup_bottom_style_input p:nth-child(2){
+    font-weight: 800;
 }

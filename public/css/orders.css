@@ -135,12 +135,6 @@
         min-width: 30px !important;
     }
 
-    /* 5. Atur halaman */
-    @page {
-        size: A4 landscape !important; /* Orientasi landscape untuk ruang lebih */
-        margin: 0.5cm !important;
-    }
-
     body {
         margin: 0 !important;
         padding: 0 !important;
@@ -183,6 +177,15 @@
     cursor: pointer;
     background-color: #3b82f6 ;
 }
+.btn_nota{
+    border: none;
+    outline: none;
+    font-size: .86vw;
+    border-radius: .4vw;
+    width: max-content;
+    padding: .4vw .6vw;
+    cursor: pointer;
+}
 .bg-gray-400{
     background-color: #9ca3af;
 }
@@ -191,6 +194,30 @@
 }
 .bg-blue-500{
     background-color: #3b82f6;
+}
+.bg-green-500{
+    background-color: #16a34a;
+}
+.text-green-500{
+    color: #16a34a;
+}
+.text-red-500{
+    color: #dc2626;
+}
+.bg-purple-500{
+    background-color: #a10fa1;
+}
+.bg-orange-500{
+    background-color: #FFA500;
+}
+.bg-pink-500{
+    background-color: #FFC0CB;
+}
+.bg-teal-500{
+    background-color: #008080;
+}
+.bg-indigo-500{
+    background-color: #4B0082;
 }
 .bg-blue-200{
     background-color: #dde3ee;
@@ -202,9 +229,59 @@
     display: block;
 }
 
+.layout_black{
+    width: 100%;
+    padding: 3vw 16vw;
+    position: relative;
+}
 .pelanggan_detail_container{
     width: 100%;
     padding: 1.8vw;
+}
+.layout_nota_box{
+    width: 100%;
+    background-color: white;
+    padding: 1.5vw 1.7vw;
+    border-radius: .6vw;
+}
+.nota_main_layout{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+.nota_main_size{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.nota_main_size_grid{
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    justify-items: center;
+    width: 100%;
+    grid-gap: .6vw;
+}
+.nota_main_size_grid label{
+    font-size: .88vw;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+.nota_main_size_grid input {
+    width: 100%;
+    text-align: center;
+    outline: none;
+    border: .1vw solid rgb(168, 168, 168);
+    border-radius: .23vw;
+    padding: .3vw .7vw;
+    -moz-appearance: textfield;
+    font-size: 1vw;
+}
+.nota_main_size_grid input::-webkit-outer-spin-button,
+.nota_main_size_grid input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .pelanggan_detail_layout{
     display: grid;
@@ -249,6 +326,9 @@
 }
 .bg-yellow-500{
     background-color: #f59e0b;
+}
+.bg-cyan-500{
+    background-color: #00FFFF;
 }
 .bg-blue-500{
     background-color: #3b82f6;
@@ -428,18 +508,18 @@
     border-bottom: .1vw solid #d1d5db;
 }
 .spesifikasi_layout_btn button{
-    font-size: 1vw;
+    font-size: .9vw;
     outline: none;
-    border: none;
-    padding: .6vw .9vw;
-    border-radius: .6vw;
+    border: .12vw solid black;
+    padding: .3vw .9vw;
+    border-radius: .4vw;
     cursor: pointer;
+    color: white;
 }
 .spesifikasi_layout_btn_grid{
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-gap: 1.1vw;
-    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1vw;
     margin-bottom: 1.5vw;
 }
 .spesifikasi_layout_btn_grid_box{
@@ -448,12 +528,27 @@
     gap: .3vw;
 }
 .spesifikasi_layout_btn_grid button{
-    font-size: 1vw;
+    font-size: .9vw; 
     outline: none;
-    border: none;
-    padding: .6vw .9vw;
-    border-radius: .6vw;
+    padding: .3vw .9vw;
+    border-radius: .4vw;
+    border: .12vw solid black;
     cursor: pointer;
+    opacity: .5;
+}
+.active_border_btn{
+    border-bottom: .2vw solid black !important;
+    border-right: .2vw solid black !important; 
+}
+.btn-add-style{
+    border: .1vw solid #16a34a !important;
+    background-color: transparent;
+    opacity: 1 !important;
+    color: #16a34a !important;
+}
+.text-none-style{
+    color: #000;
+    font-size: .95vw;
 }
 .spesifikasi_layout_btn_grid button img{
     width: 1.4vw;
@@ -587,3 +682,14 @@
         padding: 1.8vw 0;
     }
 }
+
+.tab-blue   { background:#3b82f6; color:#fff; }
+.tab-green  { background:#22c55e; color:#fff; }
+.tab-purple { background:#a855f7; color:#fff; }
+.tab-orange { background:#f97316; color:#fff; }
+.tab-pink   { background:#ec4899; color:#fff; }
+.tab-teal   { background:#14b8a6; color:#fff; }
+.tab-indigo { background:#6366f1; color:#fff; }
+.tab-red    { background:#ef4444; color:#fff; }
+.tab-yellow { background:#eab308; color:#000; }
+.tab-cyan   { background:#06b6d4; color:#fff; }

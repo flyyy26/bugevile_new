@@ -15,4 +15,8 @@ class HargaAffiliator extends Model
     protected $fillable = [
         'harga',
     ];
+    public function getHargaAttribute($value)
+    {
+        return $value;
+    }
 }

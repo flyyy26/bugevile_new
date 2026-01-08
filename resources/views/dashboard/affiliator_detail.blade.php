@@ -1,20 +1,11 @@
 @extends('layouts.dashboard') 
 
-@section('title','Affiliator Detail')
+@section('title','Sales Detail')
 
 @section('content')
 <div>
     <div class="dashboard_banner dashboard_banner_print">
         <img src="{{ asset('images/logo_bugevile_2.png') }}" alt="Logo">
-        <div class="dashboard_banner_btn">
-            <a style="text-decoration:none;" href="{{ route('affiliator.index') }}">
-                <button
-                    class="hidden_print"
-                >
-                    ← Kembali
-                </button> 
-            </a>
-        </div>
     </div>
 
     <div class="affiliate_detail_container">
@@ -54,32 +45,44 @@
 
             <div class="affiliate_detail_card affiliate_detail_card_two">
                 <div class="affiliate_omset">
-                    <h3>Total Omset Masuk</h3>
+                    <!-- Box 1: Total Komisi -->
                     <div class="affiliate_omset_box">
-                        <h1>
-                            Rp {{ number_format($totalOmset, 0, ',', '.') }}
-                        </h1>
-                        <p>
-                            {{ $orders->count() }} order × Rp {{ number_format($harga, 0, ',', '.') }}
-                        </p>
-                    </div>
-                    <div class="affiliate_omset_box">
-                        <h3>Omset Dapat Dicairkan</h3>
+                        <h3>Total Komisi</h3>
                         <h1 class="text-2xl font-semibold text-blue-600">
-                            @if(($completedOmset ?? 0) > 0)
-                                Rp {{ number_format($completedOmset, 0, ',', '.') }}
+                            @if($totalKomisi > 0)
+                                Rp {{ number_format($totalKomisi, 0, ',', '.') }}
                             @else
                                 <span class="text-gray-400">Rp 0</span>
                             @endif
                         </h1>
                         <p>
-                            @if(($completedCount ?? 0) > 0)
-                                {{ $completedCount }} order selesai × Rp {{ number_format($harga, 0, ',', '.') }}
+                            ({{ $orders->count() }} order)
+                        </p>
+                    </div>
+                    
+                    <!-- Box 2: Komisi Siap Cair -->
+                    <div class="affiliate_omset_box">
+                        <h3>Komisi Siap Cair</h3>
+                        <h1 class="text-2xl font-semibold text-green-600">
+                            @if($completedKomisi > 0)
+                                Rp {{ number_format($completedKomisi, 0, ',', '.') }}
+                            @else
+                                <span class="text-gray-400">Rp 0</span>
+                            @endif
+                        </h1>
+                        <p>
+                            @if($completedCount > 0)
+                                ({{ $completedCount }} order selesai)
+                                <br>
+                                <small class="text-gray-500">
+                                    Dari laba bersih: Rp {{ number_format($completedLabaBersih, 0, ',', '.') }}
+                                </small>
                             @else
                                 <span class="text-gray-400">Belum ada order selesai</span>
                             @endif
                         </p>
                     </div>
+                    <h3>Total QTY keseluruhan : {{ number_format($totalQtySemuaOrder) }}</h3>
                 </div>
             </div>
         </div>
@@ -96,8 +99,9 @@
                             <tr class="bg-gray-100 text-gray-600 text-sm uppercase">
                                 <th><div class="text-center">Tanggal</div></th>
                                 <th><div class="text-center">Nama Customer</div></th>
-                                <th><div class="text-center">Jenis Job</div></th>
-                                <th><div class="text-center">Estimasi</div></th>
+                                <th><div class="text-center">Job</div></th>
+                                <th><div class="text-center">Qty</div></th>
+                                <th><div class="text-center">Komisi</div></th>
                                 <th><div class="text-center">Status</div></th> 
                             </tr>
                         </thead>
@@ -112,51 +116,46 @@
                                 <td class="p-3 border-b font-medium"><div class="text-center">
                                     {{ $order->nama_konsumen ?? 'Guest' }}
                                 </td>
-                                <td class="p-3 border-b font-medium"><div class="text-center">
-                                    {{ $order->nama_job }} {{ optional($order->jenisOrder)->nama_jenis ?? $order->jenis_order_id }}
-                                    <a href="{{ url('dashboard/' . $order->slug) }}" style="color:blue;"  class="ml-2 bg-blue-600 text-xs p-1 rounded">
-                                        Lihat job
+                                <td class="p-3 border-b"><div class="text-center">
+                                    <div class="font-medium">{{ $order->nama_job }} {{ optional($order->jenisOrder)->nama_jenis ?? $order->jenis_order_id }}</div>
+                                    <a href="{{ url('dashboard/' . $order->slug) }}" class="btn_more_style">
+                                        Lihat Progress
                                     </a>
                                 </td>
-                                <td class="border-b text-center"><div class="text-center">
-                                    @php
-                                        // 1. Ambil angka bulat sebagai Hari
-                                        $hari = floor($order->est);
-                                        
-                                        // 2. Ambil sisa desimal, lalu kali 24 untuk jadi Jam (dibulatkan)
-                                        $jam = round(($order->est - $hari) * 24);
-                                    @endphp
-
-                                    {{-- Tampilkan Hari jika lebih dari 0 --}}
-                                    @if($hari > 0)
-                                        {{ $hari }} Hari
-                                    @endif
-
-                                    {{-- Tampilkan Jam jika lebih dari 0 --}}
-                                    @if($jam > 0)
-                                        {{ $jam }} Jam
-                                    @endif
-
-                                    {{-- Jika datanya 0 atau kosong --}}
-                                    @if($hari == 0 && $jam == 0)
+                                <td class="p-3 border-b text-center">
+                                    <div class="text-center">{{ number_format($order->qty, 0, ',', '.') }}</div>
+                                </td>
+                                <td class="border-b"><div class="text-center">
+                                    @if($order->laba_bersih_affiliate > 0)
+                                        <div class="font-semibold text-green-600">
+                                            Rp {{ number_format($order->laba_bersih_affiliate, 0, ',', '.') }}
+                                        </div>
+                                        @if($order->laba_bersih > 0)
+                                            <small class="text-gray-500 text-xs">
+                                                dari laba Rp {{ number_format($order->laba_bersih, 0, ',', '.') }}
+                                            </small>
+                                        @endif
+                                    @else
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </td>
-                                <td class="p-3 border-b"><div class="text-center">
+                                <td><div class="text-center affiliate_aksi">
                                     @if( ($order->status ?? 1) == 1 )
-                                        <span class="px-2 py-1 rounded text-xs font-bold bg-green-100 text-green-800">
+                                        <button type="button" class="bg-green-500">
                                             Selesai
-                                        </span>
+                                        </button>
+                                        <p class="text-green-500">Siap cair</p>
                                     @else
-                                        <span class="px-2 py-1 rounded text-xs font-bold bg-yellow-100 text-yellow-800">
+                                        <button type="button" class="bg-red-500">
                                             Proses
-                                        </span>
+                                        </button>
+                                        <p class="text-red-500">Belum cair</p>
                                     @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="p-8 text-center text-gray-400"><div class="text-center">
+                                <td colspan="7" class="p-8 text-center text-gray-400"><div class="text-center">
                                     Belum ada order masuk dengan kode ini.
                                 </td>
                             </tr>

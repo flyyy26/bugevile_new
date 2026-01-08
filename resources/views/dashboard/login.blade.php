@@ -84,7 +84,12 @@
         /* Header */
         .login-header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
+        }
+
+        .login-header img{
+            width: 12vw;
+            margin-bottom:7px;
         }
 
         .login-header h1 {
@@ -326,8 +331,8 @@
 
             <!-- Header -->
             <div class="login-header">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo">
                 <h1>Selamat Datang</h1>
-                <p>Masuk ke akun Anda untuk melanjutkan</p>
             </div>
 
             <!-- Form -->
@@ -336,16 +341,12 @@
 
                 <!-- Username field -->
                 <div class="input-group">
-                    <label for="username" class="input-label">Username</label>
-                    <input 
-                        type="text" 
-                        name="username" 
-                        id="username" 
-                        required
-                        class="input-field"
-                        placeholder="Masukkan username Anda"
-                        autocomplete="username"
-                    >
+                    <label for="username" class="input-label">Masuk Sebagai</label>
+                    <select name="username" id="username" required class="input-field">
+                        <option value="" disabled selected>-- Pilih Role --</option>
+                        <option value="bugevile">Admin</option>
+                        <option value="karyawan">Karyawan</option>
+                    </select>
                 </div>
 
                 <!-- Password field -->
@@ -463,6 +464,41 @@
                  document.activeElement.id === 'password')) {
                 e.preventDefault();
                 document.querySelector('.login-form').submit();
+            }
+        });
+
+        document.getElementById('password').addEventListener('keyup', function(e) {
+            const passwordField = this;
+            const passwordValue = passwordField.value;
+            
+            // Konversi ke lowercase jika caps lock aktif
+            if (e.getModifierState('CapsLock')) {
+                // Simpan posisi cursor
+                const start = passwordField.selectionStart;
+                const end = passwordField.selectionEnd;
+                
+                // Ubah ke lowercase
+                passwordField.value = passwordValue.toLowerCase();
+                
+                // Kembalikan posisi cursor
+                passwordField.setSelectionRange(start, end);
+            }
+        });
+
+        document.getElementById('password').addEventListener('input', function(e) {
+            const passwordField = this;
+            
+            // Jika ada huruf kapital, konversi ke lowercase
+            if (/[A-Z]/.test(passwordField.value)) {
+                // Simpan posisi cursor
+                const start = passwordField.selectionStart;
+                const end = passwordField.selectionEnd;
+                
+                // Ubah ke lowercase
+                passwordField.value = passwordField.value.toLowerCase();
+                
+                // Kembalikan posisi cursor
+                passwordField.setSelectionRange(start, end);
             }
         });
     </script>

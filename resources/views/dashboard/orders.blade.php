@@ -6,7 +6,17 @@
     <div class="dashboard_banner">
         <img src="{{ asset('images/logo_bugevile_2.png') }}" alt="Logo">
         <div class="dashboard_banner_btn">
-            <button onclick="openOrderModal()">Tambah Job</button>
+            <div class="setting_btn_layout">
+                <button onclick="openOrderModal()">Tambah Job</button>
+                <select id="filterKategori" class="w-64" style="margin-left: 10px;">
+                    <option value="">Semua Kategori</option>
+                    @foreach ($kategoriList as $kategori)
+                        <option value="{{ $kategori->id }}" {{ request('kategori_id') == $kategori->id ? 'selected' : '' }}>
+                            {{ $kategori->nama }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
             <select id="select2-pelanggan" class="w-64">
                 <option value="">Cari Nama Pelanggan...</option>
                 @foreach ($pelanggans as $pelanggan)
@@ -28,10 +38,11 @@
                     <th><div class="table_width">Nama Konsumen</div></th>
                     <th><div class="table_width_tgl text-center">Sales</div></th>
                     <th><div class="table_width_jenis text-center">Jenis Job</div></th>
+                    <th><div class="table_width_jenis text-center">Nama Job</div></th>
                     <th><div class="table_width_tgl text-center">Kategori</div></th>
                     <th><div class="table_width_tgl text-center">Tanggal</div></th>
                     <th><div class="table_width_tgl text-center" style="font-size:.8vw !important;">Total Harga</div></th>
-                    <th><div class="text-center">Qty</div></th>
+                    <th><div class="text-center table_width_jenis">Qty</div></th>
                     <th><div class="text-center">Hari</div></th>
                     <th>Deadline</th>
                     <th>Setting</th>
@@ -89,10 +100,11 @@
                             </div>
                         </td>
                         <td><div class="text-center">{{ $o->nama_job }} </div></td>
+                        <td><div class="text-center">{{ $o->nama_jenis_job ?? 'Tidak Ada' }} </div></td>
                         <td><div class="text-center">{{ optional($o->jenisOrder)->nama_jenis ?? '' }}</div></td>
                         <td><div class="text-center">{{ $o->created_at->format('Y-m-d') }}</div></td>
                         <td><div class="text-center">Rp {{ number_format($o->harga_jual_total ?? 0, 0, ',', '.') }}</div></td>
-                        <td><div class="text-center">{{ $o->qty }}</div></td>
+                        <td><div class="text-center">{{ $o->qty }}<br><small class="text-muted">({{ optional(optional($o->jenisOrder)->kategori)->nama ?? '-' }})</small></div></td>
                         <td><div class="text-center">{{ (float) $o->hari }}</div></td>
                         <td><div class="text-center">{{ (float) $o->deadline }}</div></td>
                         <td>
@@ -151,11 +163,15 @@
             </tbody>
             <tfoot>
                 <tr class="bg-gray-400 font-bold">
-                    <td class="text-center" colspan="7">TOTAL KESELURUHAN</td>
+                    <td class="text-center" colspan="8">TOTAL KESELURUHAN</td>
                     
                     <td id="total_qty">
                         <div class="text-center">
-                            <b>{{ $totals?->total_qty }}</b>
+                            <div style="font-size: 0.8em;" id="kategori-breakdown">
+                                @foreach ($totalQtyByKategori as $kategoriId => $data)
+                                    <div><b>{{ $data['nama'] }}: {{ $data['total_qty'] }}</b></div>
+                                @endforeach
+                            </div>
                         </div>
                     </td>
                     <td id="total_hari">
@@ -343,13 +359,25 @@
                 </div>
 
                 <!-- Nama Job -->
-                <div class="form_field">
-                    <select id="select2-nama-job" name="nama_job" required>
-                        <option value="" selected disabled>Pilih Nama Job...</option>
-                        @foreach ($jobs as $a)
-                            <option value="{{ $a->nama_job }}">{{ $a->nama_job }}</option>
-                        @endforeach
-                    </select>
+                <div class="form_field form_field_normal">
+                    <div class="dashboard_popup_order_konsumen">
+                        <div>
+                            <label>Jenis Job</label>
+                            <select id="select2-nama-job" name="nama_job" required>
+                                <option value="" selected disabled>Pilih Jenis Job...</option>
+                                @foreach ($jobs as $a)
+                                    <option value="{{ $a->nama_job }}">{{ $a->nama_job }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div></div>
+                        <div>
+                            <label>Nama Job</label>
+                            <input type="text" name="nama_jenis_job" id="nama_jenis_job" 
+                                class="input_form" 
+                                placeholder="Masukkan Nama Job" value="">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TAB KATEGORI -->
@@ -1398,6 +1426,17 @@
             }
         });
 
+        // Filter Kategori Jenis Order
+        $('#filterKategori').on('change', function() {
+            let kategoriId = $(this).val();
+            let url = "{{ url('/dashboard/orders') }}";
+            
+            if (kategoriId) {
+                url += '?kategori_id=' + kategoriId;
+            }
+            
+            window.location.href = url;
+        });
     });
 </script>
 
@@ -2303,6 +2342,7 @@
                 '_token': document.querySelector('input[name="_token"]').value,
                 'nama_konsumen': document.getElementById('select2-nama-konsumen').value,
                 'nama_job': document.getElementById('select2-nama-job').value,
+                'nama_jenis_job': document.getElementById('nama_jenis_job').value,
                 'affiliator_kode': document.getElementById('affiliator_kode_input').value,
                 'grand_total': document.getElementById('grandTotalValue').value,
                 
@@ -2359,17 +2399,81 @@
         document.getElementById('multiOrderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Validasi
+            // === VALIDASI PEMBAYARAN - SOLUSI FIX ===
+            const grandTotal = getGrandTotal();
+            
+            console.log('Validasi pembayaran - Grand Total:', grandTotal);
+            
+            // Cek 1: Pastikan ada order
+            if (grandTotal <= 0) {
+                showToast('Tambahkan order terlebih dahulu', 'warning'); // PERBAIKAN: message dulu, lalu type
+                return;
+            }
+            
+            // Cek 2: Apakah user sudah mengklik tombol pembayaran?
+            const paymentSection = document.getElementById('paymentSection');
+            const isPaymentSectionVisible = !paymentSection.classList.contains('hidden');
+            
+            console.log('Payment section visible:', isPaymentSectionVisible);
+            
+            if (!isPaymentSectionVisible) {
+                // User belum mengklik tombol "Bayar DP" atau "Bayar Lunas" sama sekali
+                showToast('Tidak ada pembayaran, data tidak disimpan.', 'error'); // PERBAIKAN
+                
+                // TUTUP MODAL langsung setelah 1.5 detik
+                setTimeout(() => {
+                    closeOrderModal();
+                }, 1500);
+                
+                return;
+            }
+            
+            // Cek 3: Jika sudah klik tombol, cek apakah ada nilai pembayaran
+            const dpAmount = parseFloat(document.getElementById('dpAmount').value) || 0;
+            const sisaBayar = parseFloat(document.getElementById('sisaBayar').value) || 0;
+            const harusDibayar = parseFloat(document.getElementById('harusDibayar').value) || 0;
+            const paymentStatus = document.getElementById('paymentStatus').value === 'true';
+            
+            console.log('Payment details:', {
+                dpAmount,
+                sisaBayar,
+                harusDibayar,
+                paymentStatus
+            });
+            
+            // Logika: Ada pembayaran jika:
+            // 1. DP > 0 ATAU
+            // 2. Status LUNAS (paymentStatus = true) ATAU
+            // 3. Sudah bayar sebagian (sisaBayar < harusDibayar)
+            const hasPayment = (dpAmount > 0) || 
+                            (paymentStatus === true) || 
+                            (sisaBayar < harusDibayar);
+            
+            console.log('Has payment?', hasPayment);
+            
+            if (!hasPayment) {
+                // User sudah klik tombol pembayaran tapi tidak mengisi nilai
+                showToast('Tidak ada pembayaran, data tidak disimpan.', 'error'); // PERBAIKAN
+                
+                // TUTUP MODAL langsung
+                setTimeout(() => {
+                    closeOrderModal();
+                }, 1500);
+                
+                return;
+            }
+            
+            // === VALIDASI LAINNYA ===
             const hasValidOrders = Object.values(window.orders).some(order => order.totalQty > 0);
             if (!hasValidOrders) {
-                showToast('warning', 'Isi minimal satu order dengan qty > 0');
+                showToast('Isi minimal satu order dengan qty > 0', 'warning'); // PERBAIKAN
                 return;
             }
             
             const namaKonsumen = document.getElementById('select2-nama-konsumen').value;
             const namaJob = document.getElementById('select2-nama-job').value;
             if (!namaKonsumen || !namaJob) {
-                showToast('warning', 'Isi Nama Konsumen dan Nama Job');
+                showToast('Isi Nama Konsumen dan Nama Job', 'warning'); // PERBAIKAN
                 return;
             }
 
@@ -2378,7 +2482,7 @@
             const pelangganId = selectedOption.getAttribute('data-pelanggan-id') || selectedOption.value;
             
             if (!pelangganId) {
-                showToast('error', 'Pelanggan tidak valid');
+                showToast('Pelanggan tidak valid', 'error'); // PERBAIKAN
                 return;
             }
 
@@ -2386,7 +2490,7 @@
             const formData = prepareAllData();
 
             if (!formData.jenis_order_id || formData.jenis_order_id.length === 0) {
-                showToast('error', 'Tidak ada data order yang valid');
+                showToast('Tidak ada data order yang valid', 'error'); // PERBAIKAN
                 return;
             }
             
@@ -2397,7 +2501,7 @@
             submitBtn.disabled = true;
             
             // Kirim ke server
-            fetch(this.action, {
+            fetch(this.action, { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2420,7 +2524,7 @@
                 console.log('Response data:', data);
                 
                 if (data.success) {
-                    showToast('success', data.message || 'Data berhasil disimpan!');
+                    showToast(data.message || 'Data berhasil disimpan!', 'success'); // PERBAIKAN
                     
                     document.getElementById('savedPelangganId').value = data.pelanggan_id || pelangganId;
                     
@@ -2430,14 +2534,14 @@
                     disableFormAfterSave();
                     
                 } else {
-                    showToast('error', data.message || 'Gagal menyimpan');
+                    showToast(data.message || 'Gagal menyimpan', 'error'); // PERBAIKAN
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('error', 'Terjadi kesalahan: ' . error.message);
+                showToast('Terjadi kesalahan: ' + error.message, 'error'); // PERBAIKAN
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
             });
@@ -3033,7 +3137,7 @@
             });
             
             $('#select2-nama-job').select2({
-                placeholder: "Ketik atau pilih nama job",
+                placeholder: "Ketik atau pilih jenis job",
                 tags: true,
                 allowClear: true,
                 width: '100%'
@@ -3154,6 +3258,7 @@
 
 <!-- FUNGSI HAPUS DATA AJAX -->
 <script>
+    const PAGINATION_START = {{ $startNumber }};
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
                  document.querySelector('input[name="_token"]')?.value ||
                  '{{ csrf_token() }}';
@@ -3253,6 +3358,11 @@
                         currentOrderElement.remove();
                         console.log('Baris dihapus dari tabel');
                     }
+
+                    if (document.querySelectorAll('#orders-table-body tr').length === 0) {
+                        window.location.href = "{{ url()->current() }}?page={{ max(1, $orders->currentPage() - 1) }}";
+                        return;
+                    }
                     
                     // 2. Update nomor urut
                     updateIterationNumbers();
@@ -3260,13 +3370,11 @@
                     // 3. Update totals dengan data dari server
                     if (data && data.totals) {
                         console.log('Updating totals with:', data.totals);
-                        updateTotals(data.totals);
+                        
+                        // Panggil dengan parameter tambahan untuk breakdown
+                        updateTotals(data.totals, data.total_qty_by_kategori || data.totalQtyByKategori);
                     } else {
                         console.warn('No totals data in response');
-                        // Fallback: reload halaman jika data tidak ada
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
                     }
                     
                     // 4. Tampilkan notifikasi sukses
@@ -3292,20 +3400,22 @@
         // Fungsi untuk update nomor urut
         function updateIterationNumbers() {
             const rows = document.querySelectorAll('#orders-table-body tr');
-            
+
             rows.forEach((row, index) => {
                 const iterationCell = row.querySelector('.iteration-number');
                 if (iterationCell) {
-                    iterationCell.textContent = index + 1;
+                    iterationCell.textContent = PAGINATION_START + index + 1;
                 }
             });
-            
-            console.log('Iteration numbers updated, total rows:', rows.length);
+
+            console.log('Iteration numbers updated with pagination offset:', PAGINATION_START);
         }
 
+
         // Fungsi untuk update totals
-        function updateTotals(totals) {
+        function updateTotals(totals, totalQtyByKategori) {
             console.log('Updating totals:', totals);
+            console.log('Updating total_qty_by_kategori:', totalQtyByKategori);
             
             // Mapping untuk elemen HTML
             const mappings = {
@@ -3313,7 +3423,7 @@
                 'total_hari': '#total_hari b',
                 'total_deadline': '#total_deadline b',
                 'total_setting': '#total_setting b',
-                'total_sisa_setting': '#total_sisa_setting b', // Tambahkan jika ada
+                'total_sisa_setting': '#total_sisa_setting b',
                 'total_print': '#total_print b',
                 'total_sisa_print': '#total_sisa_print b',
                 'total_press': '#total_press b',
@@ -3346,6 +3456,41 @@
                     console.warn(`Element not found: ${selector}`);
                 }
             });
+            
+            // UPDATE BREAKDOWN PER KATEGORI
+            if (totalQtyByKategori) {
+                updateKategoriBreakdown(totalQtyByKategori);
+            }
+        }
+
+        function updateKategoriBreakdown(totalQtyByKategori) {
+            const totalQtyElement = document.getElementById('total_qty');
+            
+            if (!totalQtyElement) {
+                console.error('Element #total_qty tidak ditemukan');
+                return;
+            }
+            
+            // Kosongkan konten sebelumnya
+            totalQtyElement.innerHTML = '';
+            
+            // Buat div wrapper baru
+            const wrapper = document.createElement('div');
+            wrapper.className = 'text-center';
+            
+            // Buat div untuk daftar kategori
+            const categoryList = document.createElement('div');
+            categoryList.style.fontSize = '0.8em';
+            
+            // Loop melalui setiap kategori dan buat teks
+            Object.values(totalQtyByKategori).forEach(kategori => {
+                const categoryText = document.createElement('div');
+                categoryText.innerHTML = `<b>${kategori.nama}: ${kategori.total_qty}</b>`;
+                categoryList.appendChild(categoryText);
+            });
+            
+            wrapper.appendChild(categoryList);
+            totalQtyElement.appendChild(wrapper);
         }
 
         // Jika klik di luar modal, tutup modal

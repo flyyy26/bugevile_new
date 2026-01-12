@@ -90,7 +90,7 @@
                         <div class="text-center">
                             {{ number_format($item['total_qty_calo'], 0, ',', '.') }}
                         </div>
-                    @else
+                    @else 
                         <div class="text-gray-400">-</div>
                     @endif
                 </td>

@@ -49,7 +49,7 @@
                         id="tabHargaBarang"
                         onclick="switchTab('hargaBarang')"
                     >
-                        Harga Barang
+                        HPP Barang/Item
                     </button>
 
                 </div>

@@ -38,7 +38,11 @@ Route::middleware('auth')
         Route::get('/', [DashboardController::class, 'index']);
         // routes/web.php
         Route::get('/total-transaksi', [DashboardController::class, 'totalTransaksi'])->name('total.transaksi');
-
+        Route::get('/pemasukkan', [DashboardController::class, 'pemasukkan'])->name('pemasukkan');
+        Route::get('/pengeluaran', [DashboardController::class, 'pengeluaran'])->name('pengeluaran');
+        Route::get('/pengeluaran/filter', [DashboardController::class, 'pengeluaranFilter'])->name('pengeluaran.filter');
+        Route::get('/pemasukkan/filter', [DashboardController::class, 'pemasukkanFilter'])->name('pemasukkan.filter');
+        
         // Progress
         Route::get('/get-progress/{slug}', [DashboardController::class, 'getProgress']);
         Route::post('/progress/store', [DashboardController::class, 'store'])->name('progress.store');

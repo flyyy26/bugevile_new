@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class Order extends Model
 {
     protected $fillable = [
-        'nama_job','qty', 'group_order_id', 'jenis_order_id','hari','deadline','nama_konsumen','keterangan',
+        'nama_job', 'nama_jenis_job', 'qty', 'group_order_id', 'jenis_order_id','hari','deadline','nama_konsumen','keterangan',
         'setting','print','press','cutting','jahit','finishing','packing','est',
         'sisa_print','sisa_press','sisa_cutting','sisa_jahit','sisa_finishing','sisa_packing',
         'affiliator_kode', 'status', 'harga_jual_total', 'harga_jual_satuan', 'laba_bersih_affiliate',

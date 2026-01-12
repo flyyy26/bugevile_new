@@ -433,7 +433,7 @@ details[open] summary::after {
                 </div>
                 <div class="form_field_normal">
                     <div class="dashboard_popup_order_heading">
-                        <label>Nama Job</label>
+                        <label>Jenis Job</label>
                     </div>
                     <div class="form_field_normal">
                         @if(count($semuaNamaJob) > 0)

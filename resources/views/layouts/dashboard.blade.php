@@ -37,10 +37,33 @@
                     </a>
                     @if(Auth::user()->role === 'admin')
                         <a href="/dashboard/total-transaksi" class="{{ Request::is('dashboard/total-transaksi') ? 'active' : '' }}">
-                            Belanja
+                            Kebutuhan Bahan
                         </a>
                     @endif
-                    
+                    @if(Auth::user()->role === 'admin')
+                        <li style="list-style:none;" class="menu-item {{ Request::is('dashboard/pemasukkan*','dashboard/pengeluaran*') ? 'open' : '' }}">
+                            <a href="javascript:void(0)" class="menu-link toggle-submenu">
+                                <span>Laporan</span>
+                                <span class="arrow">▾</span>
+                            </a>
+
+                            <ul class="submenu">
+                                <li>
+                                    <a href="/dashboard/pemasukkan"
+                                    class="{{ Request::is('dashboard/pemasukkan') ? 'active' : '' }}">
+                                        Pemasukkan
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="/dashboard/pengeluaran"
+                                    class="{{ Request::is('dashboard/pengeluaran') ? 'active' : '' }}">
+                                        Pengeluaran
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    @endif
                     @if(Auth::user()->role === 'admin')
                         <li style="list-style:none;" class="menu-item {{ Request::is('dashboard/pengaturan*','dashboard/pegawai*','dashboard/affiliator*','dashboard/pelanggan*') ? 'open' : '' }}">
                             <a href="javascript:void(0)" class="menu-link toggle-submenu">
@@ -71,7 +94,6 @@
                                 </li>
                             </ul>
                         </li>
-
                     @endif
                 </div>
                 <div class="logout_layout">

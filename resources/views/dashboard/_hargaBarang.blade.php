@@ -108,7 +108,7 @@
                                     data-harga-finishing="{{ $jo->hargaJenisPekerjaan->harga_finishing ?? 0 }}"
                                     data-harga-packing="{{ $jo->hargaJenisPekerjaan->harga_packing ?? 0 }}"
                                     data-asesoris="{{ json_encode($jo->belanja->asesoris ?? []) }}">
-                                Ubah
+                                HPP
                             </button>
                             <button
                                 onclick="showDeleteJenisOrderModal({{ $jo->id }}, '{{ addslashes($jo->nama_jenis) }}', event)"
@@ -133,7 +133,7 @@
     <div class="dashboard_popup_order_wrapper">
         <div class="dashboard_popup_order_box">
             <div class="dashboard_popup_order_heading">
-                <h2>Edit Kategori</h2>
+                <h2>Kelola HPP Barang/Item</h2>
                 <button onclick="closeEditModalSc()">&times;</button>
             </div>
 

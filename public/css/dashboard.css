@@ -59,6 +59,20 @@
     border: none;
     cursor: pointer;
 }
+.dashboard_banner_btn select{
+    background-color: white;
+    color: #333;
+    padding: .33vw .7vw;
+    font-weight: 500;
+    border-radius: 0.4vw;
+    font-size: 1vw;
+    box-shadow: 0 0.2vw 0.3vw rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 10;
+    outline: none;
+    border: none;
+    cursor: pointer;
+}
 .dashboard_banner_select{
     display: flex;
     flex-direction: column;
@@ -81,6 +95,10 @@
 
 .dashboard_content{
     padding: 1.3vw 1.3vw;
+    background-image: url(../images/wood.jpg);
+    background-position: center;
+    background-size: cover;
+    width: 100%;
 }
 .dashboard_top_progress{
     display: grid;
@@ -89,7 +107,7 @@
 }
 .dashboard_top_progress_card{
     background-color: white;
-    padding: 2.4vw 1.3vw;
+    padding: 1.5vw 1.3vw;
     border-radius: 0.6vw;
     box-shadow: 0 0.2vw 0.4vw rgba(0, 0, 0, 0.1);
     text-align: center;

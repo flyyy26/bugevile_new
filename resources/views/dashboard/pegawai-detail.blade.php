@@ -49,7 +49,7 @@
                     <option value="date_desc">Waktu Terbaru</option>
                     <option value="date_asc">Waktu Terlama</option>
                     <option value="jenis_pekerjaan_asc">Jenis Pekerjaan</option>
-                    <option value="job_name_asc">Nama Job</option>
+                    <option value="job_name_asc">Jenis Job</option>
                 </select>
                 <button onclick="printHistory()" class="pegawai_page_btn pegawai_page_btn_print">
                     Print
@@ -62,8 +62,7 @@
             <table class="min-w-full text-xs">
                 <thead>
                     <tr class="bg-gray-800">
-                        <th><div>Nama Job</div></th>
-                        <th><div class="text-center">Jenis Pekerjaan</div></th>
+                        <th><div>Jenis Job</div></th>
                         <th><div class="text-center">Qty</div></th>
                         <th class="total-qty"><div class="text-center">Total Qty</div></th>
                         <th><div class="text-center">Total Harga</div></th>
@@ -97,8 +96,10 @@
     };
 
     const jobNameMap = {};
+    const jobNameJenisMap = {};
     orders.forEach(job => {
         jobNameMap[job.id] = job.nama_job;
+        jobNameJenisMap[job.id] = job.nama_jenis_job;
     });
 
     const rowsPerPage = 8;
@@ -179,6 +180,7 @@
             const namaKonsumen = orderKonsumenMap[jobId] || 'Konsumen Tidak Ada';
             const nilaiJenis = Number(orderJenisMapNilai[jobId] || 0);
             const jobName = jobNameMap[jobId] || `ID ${jobId}`;
+            const jobNameJenis = jobNameJenisMap[jobId] || ` `;
 
             const formattedTimestamp = new Date(history.created_at).toLocaleString('id-ID', dateOptions);
             const hargaJenis = Number(hargaJenisPekerjaan[history.jenis_pekerjaan] || 0);
@@ -201,10 +203,9 @@
             const row = `
                 <tr class="${rowBg}">
                     <td class="px-3 py-2 font-medium whitespace-nowrap text-start">
-                        ${jobName} ${isPrintOrPress ? namaJenis : ''}  
+                        ${jobName} ${jobNameJenis} ${isPrintOrPress ? namaJenis : ''}  
                         <span class="text-xs text-gray-600">| ${namaKonsumen}</span>
                     </td>
-                    <td><div class="text-center">${history.jenis_pekerjaan}</div></td>
                     <td><div class="text-center">
                         ${history.qty} ${isPrintOrPress ? `x ${formatNumber(nilaiJenis)} (${namaJenis})` : ''}
                     </div></td>

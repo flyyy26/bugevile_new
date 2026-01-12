@@ -916,6 +916,7 @@
                 '_token': document.querySelector('input[name="_token"]').value,
                 'nama_konsumen': document.getElementById('select2-nama-konsumen').value,
                 'nama_job': document.getElementById('select2-nama-job').value,
+                'nama_jenis_job': document.getElementById('nama_jenis_job').value,
                 'affiliator_kode': document.getElementById('affiliator_kode_input').value,
                 'grand_total': document.getElementById('grandTotalValue').value,
                 
@@ -972,17 +973,81 @@
         document.getElementById('multiOrderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Validasi
+            // === VALIDASI PEMBAYARAN - SOLUSI FIX ===
+            const grandTotal = getGrandTotal();
+            
+            console.log('Validasi pembayaran - Grand Total:', grandTotal);
+            
+            // Cek 1: Pastikan ada order
+            if (grandTotal <= 0) {
+                showToast('Tambahkan order terlebih dahulu', 'warning'); // PERBAIKAN: message dulu, lalu type
+                return;
+            }
+            
+            // Cek 2: Apakah user sudah mengklik tombol pembayaran?
+            const paymentSection = document.getElementById('paymentSection');
+            const isPaymentSectionVisible = !paymentSection.classList.contains('hidden');
+            
+            console.log('Payment section visible:', isPaymentSectionVisible);
+            
+            if (!isPaymentSectionVisible) {
+                // User belum mengklik tombol "Bayar DP" atau "Bayar Lunas" sama sekali
+                showToast('Tidak ada pembayaran, data tidak disimpan.', 'error'); // PERBAIKAN
+                
+                // TUTUP MODAL langsung setelah 1.5 detik
+                setTimeout(() => {
+                    closeOrderModal();
+                }, 1500);
+                
+                return;
+            }
+            
+            // Cek 3: Jika sudah klik tombol, cek apakah ada nilai pembayaran
+            const dpAmount = parseFloat(document.getElementById('dpAmount').value) || 0;
+            const sisaBayar = parseFloat(document.getElementById('sisaBayar').value) || 0;
+            const harusDibayar = parseFloat(document.getElementById('harusDibayar').value) || 0;
+            const paymentStatus = document.getElementById('paymentStatus').value === 'true';
+            
+            console.log('Payment details:', {
+                dpAmount,
+                sisaBayar,
+                harusDibayar,
+                paymentStatus
+            });
+            
+            // Logika: Ada pembayaran jika:
+            // 1. DP > 0 ATAU
+            // 2. Status LUNAS (paymentStatus = true) ATAU
+            // 3. Sudah bayar sebagian (sisaBayar < harusDibayar)
+            const hasPayment = (dpAmount > 0) || 
+                            (paymentStatus === true) || 
+                            (sisaBayar < harusDibayar);
+            
+            console.log('Has payment?', hasPayment);
+            
+            if (!hasPayment) {
+                // User sudah klik tombol pembayaran tapi tidak mengisi nilai
+                showToast('Tidak ada pembayaran, data tidak disimpan.', 'error'); // PERBAIKAN
+                
+                // TUTUP MODAL langsung
+                setTimeout(() => {
+                    closeOrderModal();
+                }, 1500);
+                
+                return;
+            }
+            
+            // === VALIDASI LAINNYA ===
             const hasValidOrders = Object.values(window.orders).some(order => order.totalQty > 0);
             if (!hasValidOrders) {
-                showToast('warning', 'Isi minimal satu order dengan qty > 0');
+                showToast('Isi minimal satu order dengan qty > 0', 'warning'); // PERBAIKAN
                 return;
             }
             
             const namaKonsumen = document.getElementById('select2-nama-konsumen').value;
             const namaJob = document.getElementById('select2-nama-job').value;
             if (!namaKonsumen || !namaJob) {
-                showToast('warning', 'Isi Nama Konsumen dan Nama Job');
+                showToast('Isi Nama Konsumen dan Nama Job', 'warning'); // PERBAIKAN
                 return;
             }
 
@@ -991,7 +1056,7 @@
             const pelangganId = selectedOption.getAttribute('data-pelanggan-id') || selectedOption.value;
             
             if (!pelangganId) {
-                showToast('error', 'Pelanggan tidak valid');
+                showToast('Pelanggan tidak valid', 'error'); // PERBAIKAN
                 return;
             }
 
@@ -999,7 +1064,7 @@
             const formData = prepareAllData();
 
             if (!formData.jenis_order_id || formData.jenis_order_id.length === 0) {
-                showToast('error', 'Tidak ada data order yang valid');
+                showToast('Tidak ada data order yang valid', 'error'); // PERBAIKAN
                 return;
             }
             
@@ -1010,7 +1075,7 @@
             submitBtn.disabled = true;
             
             // Kirim ke server
-            fetch(this.action, {
+            fetch(this.action, { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1033,7 +1098,7 @@
                 console.log('Response data:', data);
                 
                 if (data.success) {
-                    showToast('success', data.message || 'Data berhasil disimpan!');
+                    showToast(data.message || 'Data berhasil disimpan!', 'success'); // PERBAIKAN
                     
                     document.getElementById('savedPelangganId').value = data.pelanggan_id || pelangganId;
                     
@@ -1043,14 +1108,14 @@
                     disableFormAfterSave();
                     
                 } else {
-                    showToast('error', data.message || 'Gagal menyimpan');
+                    showToast(data.message || 'Gagal menyimpan', 'error'); // PERBAIKAN
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('error', 'Terjadi kesalahan: ' . error.message);
+                showToast('Terjadi kesalahan: ' + error.message, 'error'); // PERBAIKAN
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
             });
@@ -2703,7 +2768,7 @@
                 <select id="selectJob">
                     <option value="Progress Keseluruhan">Progress Keseluruhan</option>
                     @foreach ($orders as $o)
-                        <option value="{{ $o->slug }}" {{ $o->slug == $job->slug ? 'selected' : '' }}>{{ $o->nama_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }}  - {{ $o->nama_konsumen }}</option>
+                        <option value="{{ $o->slug }}" {{ $o->slug == $job->slug ? 'selected' : '' }}>{{ $o->nama_job }} {{ $o->nama_jenis_job }} {{ optional($o->jenisOrder)->nama_jenis ?? '' }}  - {{ $o->nama_konsumen }}</option>
                     @endforeach 
                 </select>
             </div>
@@ -2713,7 +2778,7 @@
     <div class="dashboard_content">
         <div class="dashboard_top_progress">
             <div class="dashboard_top_progress_card">
-                <h2 id="nama_job">{{ $job->nama_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }}</h2>
+                <h2 id="nama_job">{{ $job->nama_job }} {{ $o->nama_jenis_job }} {{ optional($job->jenisOrder)->nama_jenis ?? '' }}</h2>
                 <p id="qty">{{ $job->qty }}</p>
             </div>
 
@@ -2730,10 +2795,8 @@
                 <p id="deadline">
                     @if ($job->sisa_packing == 0)
                         BERES
-                    @elseif ($job->sisa_jahit == 0)
-                        {{ number_format($job->qty / 25, 1) }} POE DEUI
                     @else
-                        {{ (float) $job->deadline }} POE DEUI
+                        {{ (float) $totalDeadlinePerJob }} POE DEUI
                     @endif
                 </p>
             </div>
@@ -2967,13 +3030,25 @@
                 </div>
 
                 <!-- Nama Job -->
-                <div class="form_field">
-                    <select id="select2-nama-job" name="nama_job" required>
-                        <option value="" selected disabled>Pilih Nama Job...</option>
-                        @foreach ($jobs as $a)
-                            <option value="{{ $a->nama_job }}">{{ $a->nama_job }}</option>
-                        @endforeach
-                    </select>
+                <div class="form_field form_field_normal">
+                    <div class="dashboard_popup_order_konsumen">
+                        <div>
+                            <label>Jenis Job</label>
+                            <select id="select2-nama-job" name="nama_job" required>
+                                <option value="" selected disabled>Pilih Jenis Job...</option>
+                                @foreach ($jobs as $a)
+                                    <option value="{{ $a->nama_job }}">{{ $a->nama_job }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div></div>
+                        <div>
+                            <label>Nama Job</label>
+                            <input type="text" name="nama_jenis_job" id="nama_jenis_job" 
+                                class="input_form" 
+                                placeholder="Masukkan Nama Job" value="">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TAB KATEGORI -->

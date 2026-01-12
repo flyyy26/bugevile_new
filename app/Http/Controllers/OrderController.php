@@ -31,16 +31,24 @@ class OrderController extends Controller
         $jenisOrders = JenisOrder::all();
         $jobs = Job::latest()->get();
 
-        $perPage = request('per_page', 6);
+        $perPage = request('per_page', 6); 
         
         // Get current page from request
         $currentPage = request('page', 1);
         
-        // PAGINATION
-        $orders = Order::with('affiliates')
-                ->latest()
-                ->paginate($perPage)
-                ->withQueryString();
+        // Get kategori filter dari request
+        $kategoriId = request('kategori_id');
+        
+        // PAGINATION - dengan filter kategori jika ada
+        $ordersQuery = Order::with('affiliates', 'jenisOrder.kategori');
+        
+        if ($kategoriId) {
+            $ordersQuery->whereHas('jenisOrder', function($q) use ($kategoriId) {
+                $q->where('id_kategori_jenis_order', $kategoriId);
+            });
+        }
+        
+        $orders = $ordersQuery->paginate($perPage)->withQueryString();
         
         // Calculate starting number based on page
         $startNumber = ($currentPage - 1) * $perPage;
@@ -62,6 +70,19 @@ class OrderController extends Controller
         $jenisSpek = JenisSpek::with('detail.jenisOrder')->get();
         $jenisSpekDetail = JenisSpekDetail::with('jenisOrder')->get();
 
+        // Hitung breakdown total_qty per kategori
+        $totalQtyByKategori = [];
+        foreach ($kategoriList as $kategori) {
+            $totalQty = Order::whereHas('jenisOrder', function($q) use ($kategori) {
+                $q->where('id_kategori_jenis_order', $kategori->id);
+            })->sum('qty');
+            
+            $totalQtyByKategori[$kategori->id] = [
+                'nama' => $kategori->nama,
+                'total_qty' => $totalQty
+            ];
+        }
+
         return view('dashboard.orders', compact(
             'orders',
             'uniqueJobs',
@@ -77,7 +98,8 @@ class OrderController extends Controller
             'jenisSpek',
             'jenisSpekDetail',
             'pelanggans',
-            'startNumber' // Add this
+            'startNumber', // Add this
+            'totalQtyByKategori'
         ));
     }
 
@@ -98,6 +120,7 @@ class OrderController extends Controller
             // Validasi data dasar dengan Validator facade - PERBAIKI VALIDASI PEMBAYARAN
             $validator = Validator::make($data, [
                 'nama_job' => 'required|string',
+                'nama_jenis_job' => 'nullable|string',
                 'nama_konsumen' => 'required',
                 'grand_total' => 'required|numeric|min:0',
                 'affiliator_kode' => 'nullable|string',
@@ -277,13 +300,8 @@ class OrderController extends Controller
                     $packingPerHari = $kemampuanPacking ? $kemampuanPacking->nilai_kemampuan : 25;
 
                     // Hitung hari produksi print
-                    $hariPrint = $qty > 0 ? round($qty / $printPerHari, 1) : 0;
-
-                    // Packing & finishing adalah nilai tetap (tidak dibagi)
-                    $hariPacking = $packingPerHari;
-
-                    // Total hari = print + packing & finishing (nilai tetap)
-                    $hari = $hariPrint + $hariPacking;
+                    $hariPrint = round($qty / $printPerHari, 2);
+                    $hari = $hariPrint;
                     $deadline = $hari;
 
                     // Hitung laba bersih affiliate
@@ -336,6 +354,7 @@ class OrderController extends Controller
                     $order = Order::create([
                         'group_order_id' => $groupOrder->id, // Link ke group order
                         'nama_job' => $validated['nama_job'],
+                        'nama_jenis_job' => $validated['nama_jenis_job'],
                         'nama_konsumen' => $pelanggan->nama,
                         'keterangan' => $keterangan,
                         'qty' => $qty,
@@ -516,13 +535,33 @@ class OrderController extends Controller
     {
         try {
             $order = Order::findOrFail($id);
+            $kategoriId = $order->jenisOrder->id_kategori_jenis_order; // Ambil kategori sebelum dihapus
             $order->delete(); 
+
+            // Update totals setelah menghapus
+            $updatedTotals = $this->updateTotals();
+            
+            // Hitung ulang total_qty per kategori untuk breakdown
+            $kategoriList = KategoriJenisOrder::all();
+            $totalQtyByKategori = [];
+            foreach ($kategoriList as $kategori) {
+                $totalQty = Order::whereHas('jenisOrder', function($q) use ($kategori) {
+                    $q->where('id_kategori_jenis_order', $kategori->id);
+                })->sum('qty');
+                
+                $totalQtyByKategori[$kategori->id] = [
+                    'nama' => $kategori->nama,
+                    'total_qty' => $totalQty
+                ];
+            }
 
             // Deteksi AJAX request
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Order berhasil dihapus'
+                    'message' => 'Order berhasil dihapus',
+                    'totals' => $updatedTotals,
+                    'total_qty_by_kategori' => $totalQtyByKategori // Kirim data breakdown
                 ]); 
             }
 
@@ -602,11 +641,11 @@ class OrderController extends Controller
         // SIMPAN KE TABEL order_totals (atau OrderTotal model)
         OrderTotal::updateOrCreate(['id' => 1], $totals);
 
-        // KEMBALIKAN data (sebagai object agar mudah diakses di JS)
-        return (object) $totals;
+        // KEMBALIKAN data (sebagai array agar mudah diakses di JS)
+        return $totals;
     }
 
-    public function detail($slug)
+    public function detail($slug) 
     {
         $order = Order::with('spesifikasi.jenisSpek', 'spesifikasi.jenisSpekDetail', 'size')
             ->where('slug', $slug)

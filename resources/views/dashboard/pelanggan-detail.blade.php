@@ -280,7 +280,7 @@
                 <div class="pelanggan_jenis_job">
                     <div class="pelanggan_jenis_job_nama_layout">
                         <div class="input_form input_form_big">
-                            <span class="pelanggan_jenis_job_heading" style="color:black !important;">{{ $order->nama_job }} {{ optional($order->jenisOrder)->nama_jenis ?? '' }}</span>
+                            <span class="pelanggan_jenis_job_heading" style="color:black !important;">{{ $order->nama_job }} {{ $order->nama_jenis_job }} {{ optional($order->jenisOrder)->nama_jenis ?? '' }}</span>
                         </div>
                     </div>
 

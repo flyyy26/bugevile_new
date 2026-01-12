@@ -109,17 +109,21 @@ class PelangganController extends Controller
 
         $pelanggans = Pelanggan::orderBy('nama', 'asc')->get();
 
+        $totalQtySemuaOrder = $pelanggan->orders->sum('qty');
         $totalHariSemuaOrder = $pelanggan->orders->sum('hari');
+
+        $kemampuanPacking = KemampuanProduksi::where('nama_kemampuan', 'Packing & Finishing')->first();
+        $packingPerHari = $kemampuanPacking ? $kemampuanPacking->nilai_kemampuan : 30;
+
+        $paket180 = ceil($totalQtySemuaOrder / 180); // misal 190 qty -> 2 paket
+        $contribKemampuan = $packingPerHari * $paket180;
+
+        $totalHariSemuaOrder += $contribKemampuan;
 
         $tanggalSelesai = null;
         if ($pelanggan->orders->count() > 0) {
-            // Ambil tanggal order pertama atau tanggal sekarang
             $tanggalAwal = $pelanggan->orders->first()->created_at ?? now();
-            
-            // Total hari = hari produksi + hari packing
-            $totalHari = $totalHariSemuaOrder;
-            
-            $tanggalSelesai = Carbon::parse($tanggalAwal)->addDays($totalHari);
+            $tanggalSelesai = Carbon::parse($tanggalAwal)->addDays($totalHariSemuaOrder);
         }
 
         $groupedSpecsByOrder = [];
@@ -134,15 +138,6 @@ class PelangganController extends Controller
             $order->tgl_masuk = $order->created_at
                 ? Carbon::parse($order->created_at)
                 : null;
-
-            // Tanggal selesai = created_at + hari (desimal)
-            $order->tgl_selesai = null;
-            if ($order->created_at && $order->hari) {
-                $jam = round($order->hari * 24);
-                $order->tgl_selesai = Carbon::parse($order->created_at)
-                    ->addHours($jam)
-                    ->addDays(2);
-            }
 
             /* ===============================
             |  GROUP SPESIFIKASI PER ORDER
@@ -173,6 +168,7 @@ class PelangganController extends Controller
             'tanggalSelesai'
         ));
     }
+
     public function showNotaByPelanggan($id)
     {
         $pelanggan = Pelanggan::with([
